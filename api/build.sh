@@ -1,1 +1,2 @@
-yum install git
+yum -y install git
+type git
