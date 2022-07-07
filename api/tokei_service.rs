@@ -37,7 +37,7 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     }
     let url = format!("https://{}/{}/{}", domain, user, repo);
 
-    let ls_remote = Command::new("git")
+    let ls_remote = Command::new("/usr/bin/git")
         .arg("ls-remote")
         .arg(&url)
         .output()
