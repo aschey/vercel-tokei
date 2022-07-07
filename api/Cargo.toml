@@ -1,0 +1,26 @@
+[package]
+edition = "2021"
+name = "vercel-tokei"
+version = "0.1.0"
+
+[dependencies]
+badge = "0.3.0"
+cached = "0.36.0"
+eyre = "0.6.8"
+http = "0.2.8"
+percent-encoding = "2.1.0"
+tempfile = "3.3.0"
+tokei = "12.1.2"
+vercel_lambda = "0.2.0"
+
+  [dependencies.git2]
+  version = "0.14.4"
+  features = [ "vendored-libgit2" ]
+
+[lib]
+name = "tokei_service"
+path = "tokei_service.rs"
+
+[[bin]]
+name = "tokei_service"
+path = "C:\\Users\\asche\\code\\vercel-tokei\\api\\tokei_service.rs"
