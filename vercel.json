@@ -6,8 +6,8 @@
     },
     "rewrites": [
       {
-        "source": "/api/(.*)",
-        "destination": "/api/main"
+        "source": "/tokei/(.*)",
+        "destination": "/api/tokei_service"
       }
     ]
   }

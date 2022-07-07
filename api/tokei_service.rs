@@ -1,7 +1,7 @@
 use badge::{Badge, BadgeOptions};
 use cached::Cached;
-use git2::{build::RepoBuilder, Direction, Remote, Repository};
-use std::{error::Error, process::Command};
+use git2::{Direction, Remote, Repository};
+use std::error::Error;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
 use vercel_lambda::{
@@ -14,16 +14,17 @@ const BLUE: &str = "#007ec6";
 const CODE: &str = "lines of code";
 const COMMENTS: &str = "comments";
 const FILES: &str = "files";
-const HASH_LENGTH: usize = 40;
 const LINES: &str = "total lines";
 const MILLION: usize = 1_000_000;
 const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
 
 fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
-    let (parts, body) = req.into_parts();
+    let (parts, _) = req.into_parts();
+
     let paths: Vec<_> = parts.uri.path().split('/').collect();
-    let (domain, user, repo) = ("github.com", "aschey", "platune"); //(paths[0], paths[1], paths[2]);
+
+    let (domain, user, repo) = (paths[2], paths[3], paths[4]);
     let category = parts
         .uri
         .query()
@@ -38,17 +39,20 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     }
     let url = format!("https://{}/{}/{}", domain, user, repo);
 
-    let mut repo = Remote::create_detached("https://github.com/aschey/platune").unwrap();
+    let mut repo = Remote::create_detached(&url[..]).unwrap();
     repo.connect(Direction::Fetch).unwrap();
     let sha = repo.list().unwrap().first().unwrap().oid().to_string();
     println!("{}", sha);
-    if CACHE
+    if let Some(badge) = CACHE
         .lock()
         .unwrap()
         .cache_get(&repo_identifier(&url, &sha))
-        .is_some()
     {
-        return Ok(Response::builder().status(304).body("".to_owned()).unwrap());
+        return Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("Content-Type", "image/svg+xml")
+            .body(make_badge(badge, &category[..]))
+            .expect("Internal Server Error"));
     }
 
     let entry = get_statistics(&url, &sha).unwrap();
