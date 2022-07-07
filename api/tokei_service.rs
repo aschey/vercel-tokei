@@ -1,5 +1,6 @@
 use badge::{Badge, BadgeOptions};
 use cached::Cached;
+use git2::{build::RepoBuilder, Direction, Remote, Repository};
 use std::{error::Error, process::Command};
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
@@ -37,21 +38,10 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     }
     let url = format!("https://{}/{}/{}", domain, user, repo);
 
-    let ls_remote = Command::new("/usr/bin/git")
-        .arg("ls-remote")
-        .arg(&url)
-        .output()
-        .unwrap();
-
-    let sha: String = ls_remote
-        .stdout
-        .iter()
-        .position(|&b| b == b'\t')
-        .filter(|i| *i == HASH_LENGTH)
-        .map(|i| (&ls_remote.stdout[..i]).to_owned())
-        .and_then(|bytes| String::from_utf8(bytes).ok())
-        .unwrap();
-
+    let mut repo = Remote::create_detached("https://github.com/aschey/platune").unwrap();
+    repo.connect(Direction::Fetch).unwrap();
+    let sha = repo.list().unwrap().first().unwrap().oid().to_string();
+    println!("{}", sha);
     if CACHE
         .lock()
         .unwrap()
@@ -123,9 +113,7 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
     let temp_dir = TempDir::new()?;
     let temp_path = temp_dir.path().to_str().unwrap();
 
-    Command::new("git")
-        .args(&["clone", url, temp_path, "--depth", "1"])
-        .output()?;
+    Repository::clone(url, temp_path).unwrap();
 
     let mut stats = Language::new();
     let mut languages = Languages::new();
