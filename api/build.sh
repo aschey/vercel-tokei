@@ -1,1 +1,1 @@
-dnf install git-all
+yum install git-all
