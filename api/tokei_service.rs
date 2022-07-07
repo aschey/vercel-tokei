@@ -1,6 +1,5 @@
 use badge::{Badge, BadgeOptions};
 use cached::Cached;
-use git2::{Remote, Repository};
 use std::{error::Error, process::Command};
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
