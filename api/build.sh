@@ -1,1 +1,1 @@
-yum install git-all
+yum install git
