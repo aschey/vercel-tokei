@@ -174,5 +174,6 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     pretty_env_logger::init();
+    #[allow(clippy::unit_arg)]
     Ok(lambda!(handler))
 }
