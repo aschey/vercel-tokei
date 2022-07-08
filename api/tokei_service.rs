@@ -7,7 +7,9 @@ use std::error::Error;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
 use vercel_lambda::{
-    error::VercelError, http::StatusCode, lambda, IntoResponse, Request, Response,
+    error::VercelError,
+    http::{Method, StatusCode},
+    lambda, IntoResponse, Request, Response,
 };
 
 const BILLION: usize = 1_000_000_000;
@@ -22,6 +24,10 @@ const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
 
 fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
+    if req.method() == Method::HEAD {
+        return Ok(Response::new("".to_string()));
+    }
+
     let (parts, _) = req.into_parts();
     let paths: Vec<_> = parts.uri.path().split('/').collect();
     if paths.len() != 5 {
