@@ -1,9 +1,10 @@
-use badge::{Badge, BadgeOptions};
 use cached::Cached;
 use eyre::Context;
 use git2::{Direction, Remote, Repository};
 use log::{error, info};
-use std::{borrow::Cow, collections::HashMap, error::Error};
+use rsbadges::Badge;
+use std::{collections::HashMap, error::Error};
+use style::Style;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
 use url::Url;
@@ -13,78 +14,15 @@ use vercel_lambda::{
     lambda, IntoResponse, Request, Response,
 };
 
-#[derive(PartialEq, Eq, Debug)]
-enum ContentType {
-    Svg,
-    Json,
-}
+use crate::{category::Category, content_type::ContentType};
 
-impl ContentType {
-    fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
-        match query.get("format") {
-            Some(format) => match format.to_lowercase().as_str() {
-                "svg" => Ok(Self::Svg),
-                "json" => Ok(Self::Json),
-                _ => Err("Invalid format parameter. Choices are 'svg' and 'json'"),
-            },
-            None => Ok(Self::Svg),
-        }
-    }
-}
-
-impl ToString for ContentType {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Svg => "image/svg+xml".to_owned(),
-            Self::Json => "application/json".to_owned(),
-        }
-    }
-}
-
-enum Category {
-    Blanks,
-    Code,
-    Comments,
-    Files,
-}
-
-impl Category {
-    fn description(&self) -> &str {
-        match self {
-            Category::Blanks => "blank lines",
-            Category::Code => "lines of code",
-            Category::Comments => "comments",
-            Category::Files => "files",
-        }
-    }
-
-    fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
-        match query.get("category") {
-            Some(category) => match category.to_lowercase().as_str() {
-                "code" => Ok(Self::Code),
-                "files" => Ok(Self::Files),
-                "blanks" => Ok(Self::Blanks),
-                "comments" => Ok(Self::Comments),
-                _ => Err(
-                    "Invalid category parameter. Choices are 'code', 'files', 'blanks', and 'comments'",
-                ),
-            },
-            None => Ok(Self::Code),
-        }
-    }
-
-    fn stats(&self, language: &Language) -> usize {
-        match self {
-            Self::Blanks => language.blanks,
-            Self::Files => language.reports.len(),
-            Self::Comments => language.comments,
-            Self::Code => language.code,
-        }
-    }
-}
+mod category;
+mod content_type;
+mod style;
 
 const BILLION: usize = 1_000_000_000;
 const BLUE: &str = "#007ec6";
+const GREY: &str = "#555555";
 const MILLION: usize = 1_000_000;
 const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
@@ -96,6 +34,7 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     }
 
     let url = Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
+
     let paths = url.path_segments().unwrap().collect::<Vec<_>>();
     if paths.len() != 4 {
         return Response::builder()
@@ -115,6 +54,11 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     let (domain, user, repo) = (paths[1], paths[2], paths[3]);
     let category = match Category::from_query(&pairs) {
         Ok(category) => category,
+        Err(e) => return bad_request(e.to_string()),
+    };
+
+    let style = match Style::from_query(&pairs) {
+        Ok(style) => style,
         Err(e) => return bad_request(e.to_string()),
     };
 
@@ -155,7 +99,7 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         .cache_get(&repo_identifier(&url, &sha))
     {
         info!("Serving from cache");
-        let badge = make_badge(&content_type, badge, &category)
+        let badge = make_badge(&content_type, badge, &category, &style)
             .map_err(|e| VercelError::new(&e.to_string()))?;
         return build_response(badge, &content_type);
     }
@@ -164,7 +108,8 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         .map_err(|e| VercelError::new(&e.to_string()[..]))?
         .value;
 
-    let badge = make_badge(&content_type, &stats, &category).map_err(internal_server_error)?;
+    let badge =
+        make_badge(&content_type, &stats, &category, &style).map_err(internal_server_error)?;
 
     build_response(badge, &content_type)
 }
@@ -180,7 +125,7 @@ fn build_response(
 ) -> Result<Response<String>, VercelError> {
     Response::builder()
         .status(StatusCode::OK)
-        .header("Content-Type", content_type.to_string())
+        .header("Content-Type", content_type.response_type())
         .header("Cache-Control", "s-maxage=60, stale-while-revalidate=300")
         .body(badge)
         .map_err(|e| internal_server_error(Box::new(e)))
@@ -205,6 +150,7 @@ fn make_badge(
     content_type: &ContentType,
     stats: &Language,
     category: &Category,
+    style: &Style,
 ) -> Result<String, Box<dyn Error>> {
     if *content_type == ContentType::Json {
         return Ok(serde_json::to_string(&stats)?);
@@ -223,13 +169,16 @@ fn make_badge(
         amount.to_string()
     };
 
-    let options = BadgeOptions {
-        subject: String::from(label),
-        status: amount,
-        color: String::from(BLUE),
+    let badge = Badge {
+        label_text: String::from(label),
+        label_color: String::from(GREY),
+        msg_text: amount,
+        msg_color: String::from(BLUE),
+        ..Badge::default()
     };
 
-    Ok(Badge::new(options)?.to_svg())
+    let badge_style = style.to_badge_style(badge);
+    Ok(badge_style.generate_svg()?)
 }
 
 #[cached::proc_macro::cached(
