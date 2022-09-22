@@ -3,12 +3,13 @@ use cached::Cached;
 use eyre::Context;
 use git2::{Direction, Remote, Repository};
 use log::{error, info};
-use std::error::Error;
+use std::{borrow::Cow, collections::HashMap, error::Error};
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
+use url::Url;
 use vercel_lambda::{
     error::VercelError,
-    http::{HeaderMap, HeaderValue, Method, StatusCode},
+    http::{Method, StatusCode},
     lambda, IntoResponse, Request, Response,
 };
 
@@ -16,6 +17,19 @@ use vercel_lambda::{
 enum ContentType {
     Svg,
     Json,
+}
+
+impl ContentType {
+    fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+        match query.get("format") {
+            Some(format) => match format.to_lowercase().as_str() {
+                "svg" => Ok(Self::Svg),
+                "json" => Ok(Self::Json),
+                _ => Err("Invalid format parameter. Choices are 'svg' and 'json'"),
+            },
+            None => Ok(Self::Svg),
+        }
+    }
 }
 
 impl ToString for ContentType {
@@ -27,15 +41,50 @@ impl ToString for ContentType {
     }
 }
 
+enum Category {
+    Blanks,
+    Code,
+    Comments,
+    Files,
+}
+
+impl Category {
+    fn description(&self) -> &str {
+        match self {
+            Category::Blanks => "blank lines",
+            Category::Code => "lines of code",
+            Category::Comments => "comments",
+            Category::Files => "files",
+        }
+    }
+
+    fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+        match query.get("category") {
+            Some(category) => match category.to_lowercase().as_str() {
+                "code" => Ok(Self::Code),
+                "files" => Ok(Self::Files),
+                "blanks" => Ok(Self::Blanks),
+                "comments" => Ok(Self::Comments),
+                _ => Err(
+                    "Invalid category parameter. Choices are 'code', 'files', 'blanks', and 'comments'",
+                ),
+            },
+            None => Ok(Self::Code),
+        }
+    }
+
+    fn stats(&self, language: &Language) -> usize {
+        match self {
+            Self::Blanks => language.blanks,
+            Self::Files => language.reports.len(),
+            Self::Comments => language.comments,
+            Self::Code => language.code,
+        }
+    }
+}
+
 const BILLION: usize = 1_000_000_000;
-const BLANKS: &str = "blank lines";
 const BLUE: &str = "#007ec6";
-const CODE: &str = "lines of code";
-const COMMENTS: &str = "comments";
-const FILES: &str = "files";
-const LINES: &str = "total lines";
-const ACCEPT_HEADER: &str = "Accept";
-const JSON_CONTENT_TYPE: &str = "application/json";
 const MILLION: usize = 1_000_000;
 const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
@@ -46,9 +95,9 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         return Ok(Response::new("".to_string()));
     }
 
-    let (parts, _) = req.into_parts();
-    let paths: Vec<_> = parts.uri.path().split('/').collect();
-    if paths.len() != 5 {
+    let url = Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
+    let paths = url.path_segments().unwrap().collect::<Vec<_>>();
+    if paths.len() != 4 {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(
@@ -57,11 +106,18 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
             )
             .map_err(|e| internal_server_error(Box::new(e)));
     }
+    let pairs = url.query_pairs().collect::<HashMap<_, _>>();
+    let content_type = match ContentType::from_query(&pairs) {
+        Ok(content_type) => content_type,
+        Err(e) => return bad_request(e.to_string()),
+    };
 
-    let content_type = get_content_type(&parts.headers);
+    let (domain, user, repo) = (paths[1], paths[2], paths[3]);
+    let category = match Category::from_query(&pairs) {
+        Ok(category) => category,
+        Err(e) => return bad_request(e.to_string()),
+    };
 
-    let (domain, user, repo) = (paths[2], paths[3], paths[4]);
-    let category = "lines";
     let mut domain = percent_encoding::percent_decode_str(domain)
         .decode_utf8()
         .map_err(|e| VercelError::new(&e.to_string()[..]))?;
@@ -93,23 +149,22 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     };
     info!("Repo sha: {sha:?}");
 
-    if let Some(badge) =
-        CACHE
-            .lock()
-            .unwrap()
-            .cache_get(&repo_identifier(&url, &sha, &content_type))
+    if let Some(badge) = CACHE
+        .lock()
+        .unwrap()
+        .cache_get(&repo_identifier(&url, &sha))
     {
         info!("Serving from cache");
-        let badge = make_badge(&content_type, badge, category)
+        let badge = make_badge(&content_type, badge, &category)
             .map_err(|e| VercelError::new(&e.to_string()))?;
         return build_response(badge, &content_type);
     }
 
-    let stats = get_statistics(&url, &sha, &content_type)
+    let stats = get_statistics(&url, &sha)
         .map_err(|e| VercelError::new(&e.to_string()[..]))?
         .value;
 
-    let badge = make_badge(&content_type, &stats, category).map_err(internal_server_error)?;
+    let badge = make_badge(&content_type, &stats, &category).map_err(internal_server_error)?;
 
     build_response(badge, &content_type)
 }
@@ -126,19 +181,9 @@ fn build_response(
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", content_type.to_string())
-        .header("Vary", "Accept")
         .header("Cache-Control", "s-maxage=60, stale-while-revalidate=300")
         .body(badge)
         .map_err(|e| internal_server_error(Box::new(e)))
-}
-
-fn get_content_type(headers: &HeaderMap<HeaderValue>) -> ContentType {
-    if let Some(accept) = headers.get(ACCEPT_HEADER) {
-        if accept == JSON_CONTENT_TYPE {
-            return ContentType::Json;
-        }
-    }
-    ContentType::Svg
 }
 
 fn bad_request(body: String) -> Result<Response<String>, VercelError> {
@@ -148,8 +193,8 @@ fn bad_request(body: String) -> Result<Response<String>, VercelError> {
         .map_err(|e| internal_server_error(Box::new(e)));
 }
 
-fn repo_identifier(url: &str, sha: &str, content_type: &ContentType) -> String {
-    format!("{}{:?}#{}", url, content_type, sha)
+fn repo_identifier(url: &str, sha: &str) -> String {
+    format!("{}#{}", url, sha)
 }
 
 fn trim_and_float(num: usize, trim: usize) -> f64 {
@@ -159,19 +204,14 @@ fn trim_and_float(num: usize, trim: usize) -> f64 {
 fn make_badge(
     content_type: &ContentType,
     stats: &Language,
-    category: &str,
+    category: &Category,
 ) -> Result<String, Box<dyn Error>> {
     if *content_type == ContentType::Json {
         return Ok(serde_json::to_string(&stats)?);
     }
 
-    let (amount, label) = match &*category {
-        "code" => (stats.code, CODE),
-        "files" => (stats.reports.len(), FILES),
-        "blanks" => (stats.blanks, BLANKS),
-        "comments" => (stats.comments, COMMENTS),
-        _ => (stats.code, LINES),
-    };
+    let amount = category.stats(stats);
+    let label = category.description();
 
     let amount = if amount >= BILLION {
         format!("{:.1}B", trim_and_float(amount, BILLION))
@@ -198,13 +238,9 @@ fn make_badge(
     with_cached_flag = true,
     type = "cached::TimedSizedCache<String, cached::Return<Language>>",
     create = "{ cached::TimedSizedCache::with_size_and_lifespan(1000, DAY_IN_SECONDS) }",
-    convert = r#"{ repo_identifier(url, _sha, _content_type) }"#
+    convert = r#"{ repo_identifier(url, _sha) }"#
 )]
-fn get_statistics(
-    url: &str,
-    _sha: &str,
-    _content_type: &ContentType,
-) -> eyre::Result<cached::Return<Language>> {
+fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language>> {
     let temp_dir = TempDir::new()?;
     let temp_path = temp_dir
         .path()
