@@ -13,11 +13,12 @@ use vercel_lambda::{
     lambda, IntoResponse, Request, Response,
 };
 
-use crate::{category::Category, content_type::ContentType, theme::Theme};
+use crate::{category::Category, content_type::ContentType, settings::Settings};
 
 mod category;
 mod color;
 mod content_type;
+mod settings;
 mod style;
 mod theme;
 
@@ -25,6 +26,7 @@ const BILLION: usize = 1_000_000_000;
 const MILLION: usize = 1_000_000;
 const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
+const REVALIDATE_FACTOR: u32 = 5;
 
 fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     // For health checks
@@ -45,26 +47,17 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
             )
             .map_err(|e| internal_server_error(Box::new(e)));
     }
+
     let pairs = url.query_pairs().collect::<HashMap<_, _>>();
-    let content_type = match ContentType::from_query(&pairs) {
-        Ok(content_type) => content_type,
+    let settings = match Settings::from_query(&pairs) {
+        Ok(settings) => settings,
         Err(e) => return bad_request(e.to_string()),
     };
 
     let (domain, user, repo) = (paths[1], paths[2], paths[3]);
-    let category = match Category::from_query(&pairs) {
-        Ok(category) => category,
-        Err(e) => return bad_request(e.to_string()),
-    };
-
-    let theme = match Theme::from_query(&pairs) {
-        Ok(theme) => theme,
-        Err(e) => return bad_request(e.to_string()),
-    };
-
     let mut domain = percent_encoding::percent_decode_str(domain)
         .decode_utf8()
-        .map_err(|e| VercelError::new(&e.to_string()[..]))?;
+        .map_err(|e| VercelError::new(e.to_string().as_ref()))?;
 
     if !domain.contains('.') {
         domain += ".com";
@@ -99,8 +92,8 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         .cache_get(&repo_identifier(&url, &sha))
     {
         info!("Serving from cache");
-        return match make_badge(&content_type, badge, &category, &theme) {
-            Ok(badge) => build_response(badge, &content_type),
+        return match make_badge(&settings, badge) {
+            Ok(badge) => build_response(badge, &settings),
             Err(e) => bad_request(e.to_string()),
         };
     }
@@ -109,8 +102,8 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         .map_err(|e| VercelError::new(&e.to_string()[..]))?
         .value;
 
-    match make_badge(&content_type, &stats, &category, &theme).map_err(internal_server_error) {
-        Ok(badge) => build_response(badge, &content_type),
+    match make_badge(&settings, &stats).map_err(internal_server_error) {
+        Ok(badge) => build_response(badge, &settings),
         Err(e) => bad_request(e.to_string()),
     }
 }
@@ -120,14 +113,18 @@ fn internal_server_error(err: Box<dyn Error>) -> VercelError {
     VercelError::new("Internal Server Error")
 }
 
-fn build_response(
-    badge: String,
-    content_type: &ContentType,
-) -> Result<Response<String>, VercelError> {
+fn build_response(badge: String, settings: &Settings) -> Result<Response<String>, VercelError> {
     Response::builder()
         .status(StatusCode::OK)
-        .header("Content-Type", content_type.response_type())
-        .header("Cache-Control", "s-maxage=60, stale-while-revalidate=300")
+        .header("Content-Type", settings.content_type.response_type())
+        .header(
+            "Cache-Control",
+            &format!(
+                "s-maxage={}, stale-while-revalidate={}",
+                settings.cache_seconds,
+                settings.cache_seconds * REVALIDATE_FACTOR
+            ),
+        )
         .body(badge)
         .map_err(|e| internal_server_error(Box::new(e)))
 }
@@ -147,18 +144,13 @@ fn trim_and_float(num: usize, trim: usize) -> f64 {
     (num as f64) / (trim as f64)
 }
 
-fn make_badge(
-    content_type: &ContentType,
-    stats: &Language,
-    category: &Category,
-    theme: &Theme,
-) -> Result<String, Box<dyn Error>> {
-    if *content_type == ContentType::Json {
+fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn Error>> {
+    if settings.content_type == ContentType::Json {
         return Ok(serde_json::to_string(&stats)?);
     }
 
-    let amount = category.stats(stats);
-    let label = category.description();
+    let amount = settings.category.stats(stats);
+    let label = settings.category.description();
 
     let amount = if amount >= BILLION {
         format!("{:.1}B", trim_and_float(amount, BILLION))
@@ -172,13 +164,13 @@ fn make_badge(
 
     let badge = Badge {
         label_text: String::from(label),
-        label_color: theme.label_color.to_string(),
+        label_color: settings.theme.label_color.to_string(),
         msg_text: amount,
-        msg_color: theme.color.to_string(),
+        msg_color: settings.theme.color.to_string(),
         ..Badge::default()
     };
 
-    let badge_style = theme.style.to_badge_style(badge);
+    let badge_style = settings.theme.style.to_badge_style(badge);
     Ok(badge_style.generate_svg()?)
 }
 
