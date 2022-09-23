@@ -9,6 +9,7 @@ pub(crate) struct Settings {
     pub(crate) content_type: ContentType,
     pub(crate) theme: Theme,
     pub(crate) cache_seconds: u32,
+    pub(crate) label: Option<String>,
 }
 
 impl Settings {
@@ -16,6 +17,8 @@ impl Settings {
         let category = Category::from_query(query)?;
         let content_type = ContentType::from_query(query)?;
         let theme = Theme::from_query(query)?;
+
+        let label = query.get("label").map(|label| label.to_string());
 
         let mut cache_seconds: u32 = match query.get("cacheSeconds") {
             Some(seconds) => seconds.parse().unwrap_or(DEFAULT_CACHE_SECONDS),
@@ -30,6 +33,7 @@ impl Settings {
             category,
             theme,
             content_type,
+            label,
         })
     }
 }

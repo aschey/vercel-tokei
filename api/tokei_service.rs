@@ -150,7 +150,10 @@ fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn E
     }
 
     let amount = settings.category.stats(stats);
-    let label = settings.category.description();
+    let label = match &settings.label {
+        Some(label) => label.as_str(),
+        None => settings.category.description(),
+    };
 
     let amount = if amount >= BILLION {
         format!("{:.1}B", trim_and_float(amount, BILLION))
