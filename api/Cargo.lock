@@ -1842,8 +1842,7 @@ dependencies = [
 [[package]]
 name = "rsbadges"
 version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65a540de69ddb75efd0f990146a8274f77a65c67cb37029fea538ffdab8aa45c"
+source = "git+https://github.com/aschey/rsbadges?rev=8fe4b4a9270f324e2155c025a8d0c6acae87fced#8fe4b4a9270f324e2155c025a8d0c6acae87fced"
 dependencies = [
  "askama",
  "base64 0.13.0",
