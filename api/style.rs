@@ -17,7 +17,7 @@ impl Style {
     pub(crate) fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
         match query.get("style") {
             Some(style) => Self::from_str(style)
-                .map_err(|_| "Invalid format parameter. Choices are 'flat', 'flat-square', 'plastic', 'for-the-badge', and 'social'"),
+                .map_err(|_| "Invalid style parameter. Choices are 'flat', 'flat-square', 'plastic', 'for-the-badge', and 'social'"),
             None => Ok(Self::Flat),
         }
     }

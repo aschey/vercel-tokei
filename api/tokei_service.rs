@@ -4,7 +4,6 @@ use git2::{Direction, Remote, Repository};
 use log::{error, info};
 use rsbadges::Badge;
 use std::{collections::HashMap, error::Error};
-use style::Style;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
 use url::Url;
@@ -14,15 +13,15 @@ use vercel_lambda::{
     lambda, IntoResponse, Request, Response,
 };
 
-use crate::{category::Category, content_type::ContentType};
+use crate::{category::Category, content_type::ContentType, theme::Theme};
 
 mod category;
+mod color;
 mod content_type;
 mod style;
+mod theme;
 
 const BILLION: usize = 1_000_000_000;
-const BLUE: &str = "#007ec6";
-const GREY: &str = "#555555";
 const MILLION: usize = 1_000_000;
 const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
@@ -33,7 +32,8 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         return Ok(Response::new("".to_string()));
     }
 
-    let url = Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
+    let url = Url::parse(&req.uri().to_string().replace('#', "%23"))
+        .map_err(|e| internal_server_error(Box::new(e)))?;
 
     let paths = url.path_segments().unwrap().collect::<Vec<_>>();
     if paths.len() != 4 {
@@ -57,8 +57,8 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         Err(e) => return bad_request(e.to_string()),
     };
 
-    let style = match Style::from_query(&pairs) {
-        Ok(style) => style,
+    let theme = match Theme::from_query(&pairs) {
+        Ok(theme) => theme,
         Err(e) => return bad_request(e.to_string()),
     };
 
@@ -99,19 +99,20 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         .cache_get(&repo_identifier(&url, &sha))
     {
         info!("Serving from cache");
-        let badge = make_badge(&content_type, badge, &category, &style)
-            .map_err(|e| VercelError::new(&e.to_string()))?;
-        return build_response(badge, &content_type);
+        return match make_badge(&content_type, badge, &category, &theme) {
+            Ok(badge) => build_response(badge, &content_type),
+            Err(e) => bad_request(e.to_string()),
+        };
     }
 
     let stats = get_statistics(&url, &sha)
         .map_err(|e| VercelError::new(&e.to_string()[..]))?
         .value;
 
-    let badge =
-        make_badge(&content_type, &stats, &category, &style).map_err(internal_server_error)?;
-
-    build_response(badge, &content_type)
+    match make_badge(&content_type, &stats, &category, &theme).map_err(internal_server_error) {
+        Ok(badge) => build_response(badge, &content_type),
+        Err(e) => bad_request(e.to_string()),
+    }
 }
 
 fn internal_server_error(err: Box<dyn Error>) -> VercelError {
@@ -150,7 +151,7 @@ fn make_badge(
     content_type: &ContentType,
     stats: &Language,
     category: &Category,
-    style: &Style,
+    theme: &Theme,
 ) -> Result<String, Box<dyn Error>> {
     if *content_type == ContentType::Json {
         return Ok(serde_json::to_string(&stats)?);
@@ -171,13 +172,13 @@ fn make_badge(
 
     let badge = Badge {
         label_text: String::from(label),
-        label_color: String::from(GREY),
+        label_color: theme.label_color.to_string(),
         msg_text: amount,
-        msg_color: String::from(BLUE),
+        msg_color: theme.color.to_string(),
         ..Badge::default()
     };
 
-    let badge_style = style.to_badge_style(badge);
+    let badge_style = theme.style.to_badge_style(badge);
     Ok(badge_style.generate_svg()?)
 }
 
