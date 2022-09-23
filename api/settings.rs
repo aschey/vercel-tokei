@@ -17,10 +17,13 @@ impl Settings {
         let content_type = ContentType::from_query(query)?;
         let theme = Theme::from_query(query)?;
 
-        let cache_seconds: u32 = match query.get("cacheSeconds") {
+        let mut cache_seconds: u32 = match query.get("cacheSeconds") {
             Some(seconds) => seconds.parse().unwrap_or(DEFAULT_CACHE_SECONDS),
             None => DEFAULT_CACHE_SECONDS,
         };
+        if cache_seconds < DEFAULT_CACHE_SECONDS {
+            cache_seconds = DEFAULT_CACHE_SECONDS;
+        }
 
         Ok(Self {
             cache_seconds,

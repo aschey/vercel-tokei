@@ -6,7 +6,7 @@ use strum::EnumProperty;
 use strum_macros::{EnumProperty, EnumString};
 
 #[derive(PartialEq, Eq, Debug, EnumString, EnumProperty)]
-#[strum(ascii_case_insensitive)]
+#[strum(ascii_case_insensitive, serialize_all = "lowercase")]
 pub(crate) enum Color {
     #[strum(props(Hex = "#4c1"))]
     BrightGreen,
