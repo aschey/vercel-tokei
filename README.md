@@ -35,10 +35,10 @@ All querystring parameters are optional.
   - **default**: `grey`
 - **color**: Background color of the metric on the right side
   - **valid options**: same as above
-  - **default**: blue
+  - **default**: `blue`
 - **cacheSeconds**: How long to cache the response for. We use Vercel's [`stale-while-revalidate`](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#stale-while-revalidate) option to maximize cache efficiency
   - **valid options**: Any number >= 60
-  - **default**: 60
+  - **default**: `60`
 
 ## Self Hosting
 
