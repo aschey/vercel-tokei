@@ -1,10 +1,10 @@
 # Tokei Serverless API
 
-This is a fork of the [Tokei badge service](https://github.com/XAMPPRocky/tokei_rs) that runs as a Vercel serverless function. This API creates a badge that will display like ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei). You can use the service hosted at `https://aschey.tech/tokei` or you can fork this repo and host it on your personal Vercel account.
+This is a fork of the [Tokei badge service](https://github.com/XAMPPRocky/tokei_rs) that runs as a Vercel serverless function, utilizing Vercel's [edge caching](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#) for fast responses. This API creates a badge that will display like ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei). You can use the service hosted at `https://aschey.tech/tokei` or you can fork this repo and host it on your personal Vercel account.
 
 ## Motivation
 
-Hosting Tokei on a traditional server has the inherent issue of filling up disk space because Tokei works by cloning repositories. This can cause the service to go down if someone requests a particularly large repository. Running on a serverless platform mitigates this issue because the container that runs the service is ephemeral. If someone requests a repository that crashes the service, it should still work fine for other users because it will just spin up a separate container.
+Hosting Tokei on a traditional server has the inherent issue of filling up disk space because Tokei works by cloning repositories. This can cause the service to go down if the disk space on the server fills up. Running on a serverless platform mitigates this issue because the container that runs the service is ephemeral. If someone requests a repository that crashes the service, it should still work fine for other users because it will just spin up a separate container.
 
 ## URL Scheme
 
@@ -36,7 +36,7 @@ All querystring parameters are optional.
 - **color**: Background color of the metric on the right side
   - **valid options**: same as above
   - **default**: blue
-- **cacheSeconds**: How long to cache the response for
+- **cacheSeconds**: How long to cache the response for. We use Vercel's [`stale-while-revalidate`](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#stale-while-revalidate) option to maximize cache efficiency
   - **valid options**: Any number >= 60
   - **default**: 60
 
@@ -46,7 +46,7 @@ To host this API yourself, you can fork this repository and connect your fork to
 
 ## Running Locally
 
-Install the [Vercel CLI](https://vercel.com/docs/cli). Once installed, run `vercel dev`. If you're on Windows, you may need to run this with Git Bash or WSL. There seems to be an issue with running the Rust serverless runtime on PowerShell.
+Install the [Vercel CLI](https://vercel.com/docs/cli). Once installed, run `cargo build` in the `api` directory and then run `vercel dev` from the root directory. If you're on Windows, you may need to run this with Git Bash or WSL. There seems to be an issue with running the Rust serverless runtime on PowerShell.
 
 ## Limitations
 
