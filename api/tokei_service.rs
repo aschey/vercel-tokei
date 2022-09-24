@@ -34,8 +34,7 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
         return Ok(Response::new("".to_string()));
     }
 
-    let url = Url::parse(&req.uri().to_string().replace('#', "%23"))
-        .map_err(|e| internal_server_error(Box::new(e)))?;
+    let url = Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
 
     let paths = url.path_segments().unwrap().collect::<Vec<_>>();
     if paths.len() != 4 {
