@@ -36,7 +36,10 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
 
     let url = Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
 
-    let paths = url.path_segments().unwrap().collect::<Vec<_>>();
+    let paths = url
+        .path_segments()
+        .expect("url should always have path segments")
+        .collect::<Vec<_>>();
     if paths.len() != 4 {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
