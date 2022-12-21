@@ -19,7 +19,7 @@ tempfile = "3.3.0"
 tokei = "12.1.2"
 url = "2.3.1"
 urlencoding = "2.1.2"
-vercel_lambda = "0.2.0"
+vercel_lambda = {git = "https://github.com/aschey/vercel-rust", rev = "098e0523b85ccb266b7873dfcff5ff34724b3439"}
 
 [lib]
 name = "tokei_service"
