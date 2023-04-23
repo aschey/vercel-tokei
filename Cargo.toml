@@ -4,9 +4,10 @@ name = "vercel-tokei"
 version = "0.1.0"
 
 [dependencies]
-cached = "0.39.0"
+cached = "0.43.0"
 eyre = "0.6.8"
-git2 = "0.15.0"
+git2 = "0.16.0"
+http = "0.2.9"
 lazy-regex = "2.3.0"
 log = "0.4.17"
 percent-encoding = "2.1.0"
@@ -17,10 +18,11 @@ strum = "0.24.1"
 strum_macros = "0.24.3"
 tempfile = "3.3.0"
 tokei = "12.1.2"
+tokio = {version = "1.27.0", features = ["macros"]}
 url = "2.3.1"
 urlencoding = "2.1.2"
-vercel_lambda = {git = "https://github.com/aschey/vercel-rust", rev = "098e0523b85ccb266b7873dfcff5ff34724b3439"}
+vercel_runtime = {git = "https://github.com/vercel-community/rust", tag = "v4.0.0.beta.4"}
 
-[lib]
-name = "tokei_service"
-path = "tokei_service.rs"
+[[bin]]
+name = "tokei"
+path = "api/tokei_service.rs"
