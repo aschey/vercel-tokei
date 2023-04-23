@@ -6,7 +6,8 @@ version = "0.1.0"
 [dependencies]
 cached = "0.43.0"
 eyre = "0.6.8"
-git2 = "0.16.0"
+git2 = "0.17.1"
+gix = {version = "0.43.1", features = ["blocking-http-transport-reqwest-native-tls"]}
 http = "0.2.9"
 lazy-regex = "2.3.0"
 log = "0.4.17"

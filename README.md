@@ -8,7 +8,7 @@ Hosting Tokei on a traditional server has the inherent issue of filling up disk 
 
 ## URL Scheme
 
-```
+```sh
 https://aschey.tech/tokei/<domain>[.com]/<namespace>/<repository>[?category=<category>&format=<format>&style=<style>&labelColor=<labelColor>&color=<color>&label=<label>&cacheSeconds=<cacheSeconds>]
 ```
 
@@ -47,7 +47,3 @@ To host this API yourself, you can fork this repository and connect your fork to
 ## Running Locally
 
 Install the [Vercel CLI](https://vercel.com/docs/cli). Once installed, run `cargo build` in the `api` directory and then run `vercel dev` from the root directory. The site should be available at `localhost:3000/tokei`. If you're on Windows, you may need to run this with Git Bash or WSL. There seems to be an issue with running the Rust serverless runtime on PowerShell.
-
-## Limitations
-
-The original API invokes the Git CLI in order to do a shallow clone of the repositories and count their statistics. However, installing and invoking external dependencies on a custom Vercel serverless runtime is a bit of a pain, so instead we use [libgit2](https://github.com/libgit2/libgit2) to clone repositories. Unfortunately libgit2 does not yet support shallow clones, so **this service will not handle large repositories with lengthy commit histories well**. Once shallow clone support lands in libgit2 or [gitoxide](https://github.com/Byron/gitoxide), this limitation should improve.
