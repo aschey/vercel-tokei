@@ -1,6 +1,7 @@
 use cached::Cached;
 use eyre::Context;
 use git2::{Direction, Remote, Repository};
+use gix::{interrupt, progress, remote::fetch};
 use http::{Method, StatusCode};
 use log::{error, info};
 use rsbadges::Badge;
@@ -28,7 +29,7 @@ const REVALIDATE_FACTOR: u32 = 5;
 async fn handler(req: Request) -> Result<Response<Body>, Error> {
     tokio::task::spawn_blocking(|| handle_request(req))
         .await
-        .unwrap()
+        .with_context(|| "Task failed to run")?
 }
 
 fn handle_request(req: Request) -> Result<Response<Body>, Error> {
@@ -59,7 +60,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
     let (domain, user, repo) = (paths[1], paths[2], paths[3]);
     let mut domain = percent_encoding::percent_decode_str(domain)
         .decode_utf8()
-        .with_context(|| "Error decoding domain")?;
+        .wrap_err_with(|| "Error decoding domain")?;
 
     if !domain.contains('.') {
         domain += ".com";
@@ -90,7 +91,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
 
     if let Some(badge) = CACHE
         .lock()
-        .unwrap()
+        .expect("Cache mutex poisoned")
         .cache_get(&repo_identifier(&url, &sha))
     {
         info!("Serving from cache");
@@ -101,7 +102,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
     }
 
     let stats = get_statistics(&url, &sha)
-        .with_context(|| "Error getting statistics")?
+        .wrap_err_with(|| "Error getting statistics")?
         .value;
 
     match make_badge(&settings, &stats).map_err(internal_server_error) {
@@ -194,11 +195,20 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
         .to_str()
         .ok_or(eyre::eyre!("Error reading tempdir path"))?;
 
-    Repository::clone(url, temp_path).wrap_err_with(|| "Error cloning repo")?;
+    let shallow = fetch::Shallow::DepthAtRemote(1.try_into().expect("non-zero"));
+    let url = gix::url::parse(url.into())?;
+    let (checkout, _) = gix::prepare_clone(url, temp_path)
+        .wrap_err_with(|| "Error cloning repo")?
+        .with_shallow(shallow)
+        .fetch_only(progress::Discard, &interrupt::IS_INTERRUPTED)
+        .wrap_err_with(|| "Error fetching")?;
+
+    let repo = Repository::discover(checkout.path()).wrap_err_with(|| "Error discovering repo")?;
+    repo.checkout_head(None)
+        .wrap_err_with(|| "Error checking out HEAD")?;
 
     let mut stats = Language::new();
     let mut languages = Languages::new();
-
     languages.get_statistics(&[temp_path], &[], &Config::default());
 
     for (_, language) in languages {
