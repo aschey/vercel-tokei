@@ -203,6 +203,8 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
         .fetch_only(progress::Discard, &interrupt::IS_INTERRUPTED)
         .wrap_err_with(|| "Error fetching")?;
 
+    // Gix supports shallow clones but git2 does not, so we have to use both libraries for now.
+    // Currently gix does not have full support for checkouts (missing support for submodules) so we use git2 for this
     let repo = Repository::discover(checkout.path()).wrap_err_with(|| "Error discovering repo")?;
     repo.checkout_head(None)
         .wrap_err_with(|| "Error checking out HEAD")?;
