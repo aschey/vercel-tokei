@@ -1,17 +1,14 @@
 use cached::Cached;
 use eyre::Context;
 use git2::{Direction, Remote, Repository};
+use http::{Method, StatusCode};
 use log::{error, info};
 use rsbadges::Badge;
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
 use url::Url;
-use vercel_lambda::{
-    error::VercelError,
-    http::{Method, StatusCode},
-    lambda, IntoResponse, Request, Response,
-};
+use vercel_runtime::{Body, Error, Request, Response};
 
 use crate::{category::Category, content_type::ContentType, settings::Settings};
 
@@ -28,10 +25,16 @@ const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
 const REVALIDATE_FACTOR: u32 = 5;
 
-fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
+async fn handler(req: Request) -> Result<Response<Body>, Error> {
+    tokio::task::spawn_blocking(|| handle_request(req))
+        .await
+        .unwrap()
+}
+
+fn handle_request(req: Request) -> Result<Response<Body>, Error> {
     // For health checks
     if req.method() == Method::HEAD {
-        return Ok(Response::new("".to_string()));
+        return Ok(Response::new("".into()));
     }
 
     let url = Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
@@ -43,10 +46,7 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     if paths.len() != 4 {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
-            .body(
-                "path must have the folllowing structure: /tokei/{domain}/{user}/{repo}"
-                    .to_string(),
-            )
+            .body("path must have the folllowing structure: /tokei/{domain}/{user}/{repo}".into())
             .map_err(|e| internal_server_error(Box::new(e)));
     }
 
@@ -59,7 +59,7 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     let (domain, user, repo) = (paths[1], paths[2], paths[3]);
     let mut domain = percent_encoding::percent_decode_str(domain)
         .decode_utf8()
-        .map_err(|e| VercelError::new(e.to_string().as_ref()))?;
+        .with_context(|| "Error decoding domain")?;
 
     if !domain.contains('.') {
         domain += ".com";
@@ -101,7 +101,7 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     }
 
     let stats = get_statistics(&url, &sha)
-        .map_err(|e| VercelError::new(&e.to_string()[..]))?
+        .with_context(|| "Error getting statistics")?
         .value;
 
     match make_badge(&settings, &stats).map_err(internal_server_error) {
@@ -110,12 +110,12 @@ fn handler(req: Request) -> Result<impl IntoResponse, VercelError> {
     }
 }
 
-fn internal_server_error(err: Box<dyn Error>) -> VercelError {
+fn internal_server_error(err: Box<dyn std::error::Error>) -> Error {
     error!("{err:?}");
-    VercelError::new("Internal Server Error")
+    "Internal Server Error".into()
 }
 
-fn build_response(badge: String, settings: &Settings) -> Result<Response<String>, VercelError> {
+fn build_response(badge: String, settings: &Settings) -> Result<Response<Body>, Error> {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", settings.content_type.response_type())
@@ -127,15 +127,15 @@ fn build_response(badge: String, settings: &Settings) -> Result<Response<String>
                 settings.cache_seconds * REVALIDATE_FACTOR
             ),
         )
-        .body(badge)
+        .body(badge.into())
         .map_err(|e| internal_server_error(Box::new(e)))
 }
 
-fn bad_request(body: String) -> Result<Response<String>, VercelError> {
-    return Response::builder()
+fn bad_request(body: String) -> Result<Response<Body>, Error> {
+    Response::builder()
         .status(StatusCode::BAD_REQUEST)
-        .body(body)
-        .map_err(|e| internal_server_error(Box::new(e)));
+        .body(body.into())
+        .map_err(|e| internal_server_error(Box::new(e)))
 }
 
 fn repo_identifier(url: &str, sha: &str) -> String {
@@ -146,7 +146,7 @@ fn trim_and_float(num: usize, trim: usize) -> f64 {
     (num as f64) / (trim as f64)
 }
 
-fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn Error>> {
+fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn std::error::Error>> {
     if settings.content_type == ContentType::Json {
         return Ok(serde_json::to_string(&stats)?);
     }
@@ -212,9 +212,8 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
     Ok(cached::Return::new(stats))
 }
 
-#[allow(dead_code)]
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<(), Error> {
     pretty_env_logger::init();
-    #[allow(clippy::unit_arg)]
-    Ok(lambda!(handler))
+    vercel_runtime::run(handler).await
 }
