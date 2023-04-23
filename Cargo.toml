@@ -12,7 +12,7 @@ lazy-regex = "2.3.0"
 log = "0.4.17"
 percent-encoding = "2.1.0"
 pretty_env_logger = "0.4.0"
-rsbadges = {git = "https://github.com/aschey/rsbadges", rev = "8fe4b4a9270f324e2155c025a8d0c6acae87fced"}
+rsbadges = {git = "https://github.com/aschey/rsbadges", rev = "5a920a8b7f6f78b6501ca15e3833ad0c753e0a8e"}
 serde_json = "1.0.85"
 strum = "0.24.1"
 strum_macros = "0.24.3"
