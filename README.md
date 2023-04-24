@@ -30,8 +30,8 @@ All querystring parameters are optional.
 - **logo**: Logo that will appear before the label.
   - **valid options**: Value can be supplied in either of the following formats:
     - HTTP URL to a hosted svg icon. **Example:** `logo=https://www.svgrepo.com/show/513821/code.svg`.
-    - Data URL containing a base64-encoded SVG. 
-      - **Note:** make sure you use URL-safe base 64 encoding (`+` characters need to be encoded as `%2B`). Many tools do not default to this. 
+    - Data URL containing a base64-encoded SVG.
+      - **Note:** make sure you use URL-safe base64 encoding (`+` characters need to be encoded as `%2B`). Many tools do not default to this.
       - **Example:** `logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaH...`.
   - **default**: None
 - **cacheSeconds**: How long to cache the response for. We use Vercel's [`stale-while-revalidate`](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#stale-while-revalidate) option to maximize cache efficiency
