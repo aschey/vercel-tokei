@@ -24,7 +24,7 @@ Hosting Tokei on a traditional server has the inherent issue of filling up disk 
 
 **For the Badge**: ![Flat](https://aschey.tech/tokei/github/aschey/vercel-tokei?style=for-the-badge)
 
-**Styled:** ![Styled](https://aschey.tech/tokei/github/aschey/vercel-tokei?labelColor=badbe6&color=32a852&style=for-the-badge&logo=https://simpleicons.org/icons/rust.svg)
+**Styled:** ![Styled](https://aschey.tech/tokei/github/aschey/vercel-tokei?labelColor=badbe6&color=32a852&style=for-the-badge&label=Lines&logo=https://simpleicons.org/icons/rust.svg)
 
 **Logo Only:** ![Logo Only](https://aschey.tech/tokei/github/aschey/vercel-tokei?color=157c8c&style=for-the-badge&logo=https://simpleicons.org/icons/rust.svg&label=)
 
