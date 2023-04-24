@@ -10,6 +10,8 @@ pub(crate) struct Settings {
     pub(crate) theme: Theme,
     pub(crate) cache_seconds: u32,
     pub(crate) label: Option<String>,
+    pub(crate) logo: Option<String>,
+    pub(crate) logo_as_label: bool,
 }
 
 impl Settings {
@@ -19,6 +21,11 @@ impl Settings {
         let theme = Theme::from_query(query)?;
 
         let label = query.get("label").map(|label| label.to_string());
+        let logo = query.get("logo").map(|label| label.to_string());
+        let logo_as_label = query
+            .get("logoAsLabel")
+            .map(|l| l == "1" || l.to_lowercase() == "true")
+            .unwrap_or(false);
 
         let mut cache_seconds: u32 = match query.get("cacheSeconds") {
             Some(seconds) => seconds.parse().unwrap_or(DEFAULT_CACHE_SECONDS),
@@ -34,6 +41,8 @@ impl Settings {
             theme,
             content_type,
             label,
+            logo,
+            logo_as_label,
         })
     }
 }

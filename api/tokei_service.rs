@@ -169,10 +169,20 @@ fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn s
     };
 
     let badge = Badge {
-        label_text: String::from(label),
+        label_text: label.to_owned(),
         label_color: settings.theme.label_color.to_string(),
-        msg_text: amount,
+        msg_text: amount.clone(),
         msg_color: settings.theme.color.to_string(),
+        logo: settings.logo.clone().unwrap_or_default(),
+        // data urls can't be embedded
+        embed_logo: settings
+            .logo
+            .as_ref()
+            .map(|l| !l.starts_with("data:"))
+            .unwrap_or(false),
+        msg_title: amount,
+        label_title: label.to_owned(),
+        use_logo_as_label: settings.logo_as_label,
         ..Badge::default()
     };
 
