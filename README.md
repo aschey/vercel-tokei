@@ -1,10 +1,34 @@
 # Tokei Serverless API
 
-This is a fork of the [Tokei badge service](https://github.com/XAMPPRocky/tokei_rs) that runs as a Vercel serverless function, utilizing Vercel's [edge caching](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#) for fast responses. This API creates a badge that will display like ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei). You can use the service hosted at `https://aschey.tech/tokei` or you can fork this repo and host it on your personal Vercel account.
+This is a fork of the [Tokei badge service](https://github.com/XAMPPRocky/tokei_rs) that runs as a Vercel serverless function, utilizing Vercel's [edge caching](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#) for fast responses. You can use the service hosted at `https://aschey.tech/tokei` or you can fork this repo and host it on your personal Vercel account.
 
 ## Motivation
 
 Hosting Tokei on a traditional server has the inherent issue of filling up disk space because Tokei works by cloning repositories. This can cause the service to go down if the disk space on the server fills up. Running on a serverless platform mitigates this issue because the container that runs the service is ephemeral. If someone requests a repository that crashes the service, it should still work fine for other users because it will just spin up a separate container.
+
+## Examples
+
+**Default (lines of code):** ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei)
+
+**Blanks:** ![Blanks](https://aschey.tech/tokei/github/aschey/vercel-tokei?category=blanks)
+
+**Comments:** ![Comments](https://aschey.tech/tokei/github/aschey/vercel-tokei?category=comments)
+
+**Files:** ![Files](https://aschey.tech/tokei/github/aschey/vercel-tokei?category=files)
+
+**Plastic**: ![Flat](https://aschey.tech/tokei/github/aschey/vercel-tokei?style=plastic)
+
+**Flat Square**: ![Flat](https://aschey.tech/tokei/github/aschey/vercel-tokei?style=flat-square)
+
+**Social**: ![Flat](https://aschey.tech/tokei/github/aschey/vercel-tokei?style=social)
+
+**For the Badge**: ![Flat](https://aschey.tech/tokei/github/aschey/vercel-tokei?style=for-the-badge)
+
+**Styled:** ![Styled](https://aschey.tech/tokei/github/aschey/vercel-tokei?labelColor=badbe6&color=32a852&style=for-the-badge&logo=https://simpleicons.org/icons/rust.svg)
+
+**Logo Only:** ![Logo Only](https://aschey.tech/tokei/github/aschey/vercel-tokei?color=157c8c&style=for-the-badge&logo=https://simpleicons.org/icons/rust.svg&label=)
+
+**Logo as Label:** ![Logo as Label](https://aschey.tech/tokei/github/aschey/vercel-tokei?color=9b73eb&style=for-the-badge&logo=https://simpleicons.org/icons/rust.svg&label=&logoAsLabel=true&labelColor=dbd3ed)
 
 ## URL Scheme
 
