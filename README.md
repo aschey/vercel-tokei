@@ -79,4 +79,4 @@ To host this API yourself, you can fork this repository and connect your fork to
 
 ## Running Locally
 
-Install the [Vercel CLI](https://vercel.com/docs/cli). Once installed, run `cargo build` in the `api` directory and then run `vercel dev` from the root directory. The site should be available at `localhost:3000/tokei`. If you're on Windows, you may need to run this with Git Bash or WSL. There seems to be an issue with running the Rust serverless runtime on PowerShell.
+Install the [Vercel CLI](https://vercel.com/docs/cli). Once installed, run `cargo build` in the `api` directory and then run `vercel dev` from the root directory. The site should be available at `localhost:3000/tokei`.
