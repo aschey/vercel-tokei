@@ -43,9 +43,15 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
     };
 
     let (domain, user, repo) = (
-        hash_query.get("domain").expect("domain param missing"),
-        hash_query.get("user").expect("user param missing"),
-        hash_query.get("repo").expect("repo param missing"),
+        hash_query
+            .get("domain")
+            .ok_or_else(|| internal_server_error("domain missing".into()))?,
+        hash_query
+            .get("user")
+            .ok_or_else(|| internal_server_error("user missing".into()))?,
+        hash_query
+            .get("repo")
+            .ok_or_else(|| internal_server_error("repo missing".into()))?,
     );
     let mut domain = percent_encoding::percent_decode_str(domain)
         .decode_utf8()
@@ -225,6 +231,6 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Error> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt().with_ansi(false).init();
     vercel_runtime::run(handler).await
 }
