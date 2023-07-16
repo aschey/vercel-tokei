@@ -7,7 +7,7 @@ use strum_macros::{EnumProperty, EnumString};
 
 #[derive(PartialEq, Eq, Debug, EnumString, EnumProperty)]
 #[strum(ascii_case_insensitive, serialize_all = "lowercase")]
-pub(crate) enum Color {
+pub enum Color {
     #[strum(props(Hex = "#4c1"))]
     BrightGreen,
     #[strum(props(Hex = "#97ca00"))]
@@ -31,11 +31,7 @@ pub(crate) enum Color {
 }
 
 impl Color {
-    pub(crate) fn from_query(
-        query: &HashMap<Cow<str>, Cow<str>>,
-        key: &str,
-        default: Color,
-    ) -> Self {
+    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>, key: &str, default: Color) -> Self {
         match query.get(key) {
             Some(color) => Self::from_str(color).unwrap_or_else(|_| {
                 let mut color = color.to_string();

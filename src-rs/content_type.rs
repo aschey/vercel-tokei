@@ -5,7 +5,7 @@ use strum_macros::{EnumProperty, EnumString};
 
 #[derive(PartialEq, Eq, Debug, EnumString, EnumProperty)]
 #[strum(ascii_case_insensitive)]
-pub(crate) enum ContentType {
+pub enum ContentType {
     #[strum(props(ResponseType = "image/svg+xml"))]
     Svg,
     #[strum(props(ResponseType = "application/json"))]
@@ -13,7 +13,7 @@ pub(crate) enum ContentType {
 }
 
 impl ContentType {
-    pub(crate) fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
         match query.get("format") {
             Some(format) => Self::from_str(format)
                 .map_err(|_| "Invalid format parameter. Choices are 'svg' and 'json'"),
@@ -21,7 +21,7 @@ impl ContentType {
         }
     }
 
-    pub(crate) fn response_type(&self) -> &str {
+    pub fn response_type(&self) -> &str {
         self.get_str("ResponseType")
             .expect("ResponseType should be set")
     }

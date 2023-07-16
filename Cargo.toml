@@ -4,26 +4,31 @@ name = "vercel-tokei"
 version = "0.1.0"
 
 [dependencies]
-cached = "0.43.0"
+cached = "0.44.0"
 eyre = "0.6.8"
-git2 = "0.17.1"
-gix = {version = "0.43.1", features = ["blocking-http-transport-reqwest-native-tls"]}
+git2 = "0.17.2"
+gix = { version = "0.48.0", features = [
+    "blocking-http-transport-reqwest-native-tls",
+] }
 http = "0.2.9"
-lazy-regex = "2.3.0"
-log = "0.4.17"
-percent-encoding = "2.1.0"
-pretty_env_logger = "0.4.0"
-rsbadges = {git = "https://github.com/aschey/rsbadges", rev = "ee99a301ac9b22063464989610ed033af48856ee"}
-serde_json = "1.0.85"
-strum = "0.24.1"
-strum_macros = "0.24.3"
-tempfile = "3.3.0"
+lazy-regex = "3.0.0"
+percent-encoding = "2.3.0"
+rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "ee99a301ac9b22063464989610ed033af48856ee" }
+serde_json = "1.0.103"
+strum = "0.25.0"
+strum_macros = "0.25.1"
+tempfile = "3.6.0"
 tokei = "12.1.2"
-tokio = {version = "1.27.0", features = ["macros"]}
-url = "2.3.1"
+tokio = { version = "1.29.1", features = ["macros"] }
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
+url = "2.4.0"
 urlencoding = "2.1.2"
-vercel_runtime = {git = "https://github.com/vercel-community/rust", tag = "v4.0.0.beta.4"}
+vercel_runtime = "1.0.2"
+
+[lib]
+path = "src-rs/lib.rs"
 
 [[bin]]
 name = "tokei"
-path = "api/tokei_service.rs"
+path = "api/tokei/[domain]/[user]/[repo].rs"
