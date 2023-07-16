@@ -35,7 +35,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
     let hash_query: HashMap<_, _> = parsed_url.query_pairs().collect();
 
-    info!("PATHS {:?}", req.uri().to_string());
+    info!("Query pairs: {hash_query:?}");
 
     let settings = match Settings::from_query(&hash_query) {
         Ok(settings) => settings,
@@ -43,9 +43,9 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
     };
 
     let (domain, user, repo) = (
-        hash_query.get("domain").unwrap(),
-        hash_query.get("user").unwrap(),
-        hash_query.get("repo").unwrap(),
+        hash_query.get("domain").expect("domain param missing"),
+        hash_query.get("user").expect("user param missing"),
+        hash_query.get("repo").expect("repo param missing"),
     );
     let mut domain = percent_encoding::percent_decode_str(domain)
         .decode_utf8()
