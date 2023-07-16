@@ -3,11 +3,11 @@ use eyre::Context;
 use git2::{Direction, Remote, Repository};
 use gix::{interrupt, progress, remote::fetch};
 use http::{Method, StatusCode};
-use log::{error, info};
 use rsbadges::Badge;
 use std::collections::HashMap;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
+use tracing::{error, info};
 use url::Url;
 use vercel_runtime::{Body, Error, Request, Response};
 
@@ -38,26 +38,22 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         return Ok(Response::new("".into()));
     }
 
-    let url = Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
+    let parsed_url =
+        Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
+    let hash_query: HashMap<_, _> = parsed_url.query_pairs().collect();
 
-    let paths = url
-        .path_segments()
-        .expect("url should always have path segments")
-        .collect::<Vec<_>>();
-    if paths.len() != 4 {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body("path must have the folllowing structure: /tokei/{domain}/{user}/{repo}".into())
-            .map_err(|e| internal_server_error(Box::new(e)));
-    }
+    info!("PATHS {:?}", req.uri().to_string());
 
-    let pairs = url.query_pairs().collect::<HashMap<_, _>>();
-    let settings = match Settings::from_query(&pairs) {
+    let settings = match Settings::from_query(&hash_query) {
         Ok(settings) => settings,
         Err(e) => return bad_request(e.to_string()),
     };
 
-    let (domain, user, repo) = (paths[1], paths[2], paths[3]);
+    let (domain, user, repo) = (
+        hash_query.get("domain").unwrap(),
+        hash_query.get("user").unwrap(),
+        hash_query.get("repo").unwrap(),
+    );
     let mut domain = percent_encoding::percent_decode_str(domain)
         .decode_utf8()
         .wrap_err_with(|| "Error decoding domain")?;
@@ -236,6 +232,6 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Error> {
-    pretty_env_logger::init();
+    tracing_subscriber::fmt::init();
     vercel_runtime::run(handler).await
 }
