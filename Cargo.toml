@@ -26,6 +26,9 @@ url = "2.4.0"
 urlencoding = "2.1.2"
 vercel_runtime = "1.0.2"
 
+[lib]
+path = "src-rs/lib.rs"
+
 [[bin]]
 name = "tokei"
 path = "api/tokei/[domain]/[user]/[repo].rs"

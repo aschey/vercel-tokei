@@ -11,14 +11,7 @@ use tracing::{error, info};
 use url::Url;
 use vercel_runtime::{Body, Error, Request, Response};
 
-use crate::{category::Category, content_type::ContentType, settings::Settings};
-
-mod category;
-mod color;
-mod content_type;
-mod settings;
-mod style;
-mod theme;
+use vercel_tokei::{content_type::ContentType, settings::Settings};
 
 const BILLION: usize = 1_000_000_000;
 const MILLION: usize = 1_000_000;

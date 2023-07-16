@@ -1,21 +1,21 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use crate::{content_type::ContentType, theme::Theme, Category};
+use crate::{category::Category, content_type::ContentType, theme::Theme};
 
 const DEFAULT_CACHE_SECONDS: u32 = 60;
 
-pub(crate) struct Settings {
-    pub(crate) category: Category,
-    pub(crate) content_type: ContentType,
-    pub(crate) theme: Theme,
-    pub(crate) cache_seconds: u32,
-    pub(crate) label: Option<String>,
-    pub(crate) logo: Option<String>,
-    pub(crate) logo_as_label: bool,
+pub struct Settings {
+    pub category: Category,
+    pub content_type: ContentType,
+    pub theme: Theme,
+    pub cache_seconds: u32,
+    pub label: Option<String>,
+    pub logo: Option<String>,
+    pub logo_as_label: bool,
 }
 
 impl Settings {
-    pub(crate) fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
         let category = Category::from_query(query)?;
         let content_type = ContentType::from_query(query)?;
         let theme = Theme::from_query(query)?;
