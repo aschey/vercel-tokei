@@ -1,0 +1,16 @@
+on: [push]
+name: CI
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: cache-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build
+        run: cargo build
+      - name: Clippy
+        run: cargo clippy -- -D warnings

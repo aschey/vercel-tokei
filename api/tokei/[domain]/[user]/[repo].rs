@@ -61,7 +61,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         domain += ".com";
     }
 
-    let url = format!("https://{}/{}/{}", domain, user, repo);
+    let url = format!("https://{domain}/{user}/{repo}");
     info!("Getting info for {url}");
 
     let mut repo = match Remote::create_detached(&url[..]) {
