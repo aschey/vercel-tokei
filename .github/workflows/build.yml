@@ -1,8 +1,8 @@
 on: [push]
 name: CI
 jobs:
-  test:
-    name: Run tests
+  build-and-lint:
+    name: Build and lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
