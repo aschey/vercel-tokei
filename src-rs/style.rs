@@ -1,4 +1,6 @@
-use std::{borrow::Cow, collections::HashMap, str::FromStr};
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::str::FromStr;
 
 use rsbadges::Badge;
 use strum_macros::EnumString;
@@ -16,8 +18,10 @@ pub enum Style {
 impl Style {
     pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
         match query.get("style") {
-            Some(style) => Self::from_str(style)
-                .map_err(|_| "Invalid style parameter. Choices are 'flat', 'flat-square', 'plastic', 'for-the-badge', and 'social'"),
+            Some(style) => Self::from_str(style).map_err(|_| {
+                "Invalid style parameter. Choices are 'flat', 'flat-square', 'plastic', \
+                 'for-the-badge', and 'social'"
+            }),
             None => Ok(Self::Flat),
         }
     }

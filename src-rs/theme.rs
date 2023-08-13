@@ -1,6 +1,8 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
+use std::collections::HashMap;
 
-use crate::{color::Color, style::Style};
+use crate::color::Color;
+use crate::style::Style;
 
 pub struct Theme {
     pub style: Style,

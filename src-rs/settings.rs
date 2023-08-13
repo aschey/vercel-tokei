@@ -1,6 +1,9 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
+use std::collections::HashMap;
 
-use crate::{category::Category, content_type::ContentType, theme::Theme};
+use crate::category::Category;
+use crate::content_type::ContentType;
+use crate::theme::Theme;
 
 const DEFAULT_CACHE_SECONDS: u32 = 60;
 

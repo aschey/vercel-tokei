@@ -1,17 +1,19 @@
+use std::collections::HashMap;
+
 use cached::Cached;
 use eyre::Context;
 use git2::{Direction, Remote, Repository};
-use gix::{interrupt, progress, remote::fetch};
+use gix::remote::fetch;
+use gix::{interrupt, progress};
 use http::{Method, StatusCode};
 use rsbadges::Badge;
-use std::collections::HashMap;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
 use tracing::{error, info};
 use url::Url;
 use vercel_runtime::{Body, Error, Request, Response};
-
-use vercel_tokei::{content_type::ContentType, settings::Settings};
+use vercel_tokei::content_type::ContentType;
+use vercel_tokei::settings::Settings;
 
 const BILLION: usize = 1_000_000_000;
 const MILLION: usize = 1_000_000;
@@ -209,7 +211,8 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
         .wrap_err_with(|| "Error fetching")?;
 
     // Gix supports shallow clones but git2 does not, so we have to use both libraries for now.
-    // Currently gix does not have full support for checkouts (missing support for submodules) so we use git2 for this
+    // Currently gix does not have full support for checkouts (missing support for submodules) so we
+    // use git2 for this
     let repo = Repository::discover(checkout.path()).wrap_err_with(|| "Error discovering repo")?;
     repo.checkout_head(None)
         .wrap_err_with(|| "Error checking out HEAD")?;

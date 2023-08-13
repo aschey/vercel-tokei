@@ -1,6 +1,8 @@
-// Named colors from https://github.com/badges/shields/blob/7d452472defa0e0bd71d6443393e522e8457f856/badge-maker/lib/color.js
+// Named colors from https://github.com/badges/shields/blob/7d45247/badge-maker/lib/color.js
 
-use std::{borrow::Cow, collections::HashMap, str::FromStr};
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::str::FromStr;
 
 use strum::EnumProperty;
 use strum_macros::{EnumProperty, EnumString};

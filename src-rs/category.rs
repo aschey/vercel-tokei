@@ -1,4 +1,6 @@
-use std::{borrow::Cow, collections::HashMap, str::FromStr};
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::str::FromStr;
 
 use strum::EnumProperty;
 use strum_macros::{EnumProperty, EnumString};
