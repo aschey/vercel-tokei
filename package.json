@@ -1,0 +1,6 @@
+{
+  "name": "vercel-tokei",
+  "dependencies": {
+    "vercel-rust": "4.0.5"
+  }
+}

@@ -1,0 +1,29 @@
+on: [pull_request]
+name: "Update Vercel runtime"
+jobs:
+  update-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 2
+      - name: Check if package.json changed
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@v37
+        with:
+          files_yaml: |
+            package:
+              package.json
+      - name: Sync vercel.json
+        if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
+        run: |
+          ./sync-runtime.sh
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: "."
+          message: "apply vercel runtime changes from package.json"
+          push: true
