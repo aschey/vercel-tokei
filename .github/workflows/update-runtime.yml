@@ -1,6 +1,8 @@
 on: [pull_request]
 name: "Update Vercel runtime"
-permissions: write-all
+# required for dependabot to be able to commit changes
+permissions:
+  contents: write
 jobs:
   update-runtime:
     runs-on: ubuntu-latest
