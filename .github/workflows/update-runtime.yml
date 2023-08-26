@@ -9,6 +9,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 2
+          token: ${{ secrets.REPO_TOKEN }}
       - name: Check if package.json changed
         id: changed-files-yaml
         uses: tj-actions/changed-files@v37
