@@ -1567,9 +1567,9 @@ checksum = "96b6d623a1152c3facb79067d6e2ecdae48130030cf27d6eb21109f13bd7b836"
 
 [[package]]
 name = "gix-transport"
-version = "0.36.0"
+version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a8d976844844f8b42e70a2c2e60d68407f7055ff7e37553d1e7f2718acc3547"
+checksum = "95892eedefd65a6b4312aa5e166d2f740558adfb6854a2b7de73e82e54ef064c"
 dependencies = [
  "base64 0.21.4",
  "bstr",
