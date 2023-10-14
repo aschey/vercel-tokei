@@ -20,7 +20,7 @@ strum_macros = "0.25.2"
 tempfile = "3.8.0"
 tokei = "12.1.2"
 tokio = { version = "1.32.0", features = ["macros"] }
-tracing = "0.1.37"
+tracing = "0.1.39"
 tracing-subscriber = "0.3.17"
 url = "2.4.1"
 urlencoding = "2.1.3"
