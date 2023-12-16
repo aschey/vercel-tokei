@@ -5,7 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 cached = "0.46.1"
-eyre = "0.6.10"
+eyre = "0.6.11"
 git2 = "0.18.1"
 gix = { version = "0.56.0", features = [
     "blocking-http-transport-reqwest-native-tls",
