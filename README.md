@@ -12,7 +12,9 @@ Hosting Tokei on a traditional server has the inherent issue of filling up disk 
 
 ## Examples
 
-**Default (lines of code):** ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei)
+**Default (total lines):** ![Total Lines](https://aschey.tech/tokei/github/aschey/vercel-tokei)
+
+**Lines of Code:** ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei?category=code)
 
 **Blanks:** ![Blanks](https://aschey.tech/tokei/github/aschey/vercel-tokei?category=blanks)
 
@@ -46,54 +48,54 @@ All querystring parameters are optional.
 
 - **style**: SVG badge style
 
-   - **valid options**: `flat`, `flat-square`, `plastic`, `social`, or `for-the-badge`
-   - **default**: `flat`
+  - **valid options**: `flat`, `flat-square`, `plastic`, `social`, or `for-the-badge`
+  - **default**: `flat`
 
 - **label**: Override the default label text. Pass in an empty value (`label=`) to disable.
 
-   - **default**: Defaults to the label that matches the category
+  - **default**: Defaults to the label that matches the category
 
 - **labelColor**: Background color of the label on the left side
 
-   - **valid options**: `brightgreen`, `green`, `yellow`, `yellowgreen`, `orange`, `red`, `blue`, `grey`, `lightgrey`, or any valid CSS color. Note that CSS color strings like `hsl(195, 100%, 50%)` must be properly url encoded. You can omit the leading `#` from hex colors.
-   - **default**: `grey`
+  - **valid options**: `brightgreen`, `green`, `yellow`, `yellowgreen`, `orange`, `red`, `blue`, `grey`, `lightgrey`, or any valid CSS color. Note that CSS color strings like `hsl(195, 100%, 50%)` must be properly url encoded. You can omit the leading `#` from hex colors.
+  - **default**: `grey`
 
 - **color**: Background color of the metric on the right side
 
-   - **valid options**: same as above
-   - **default**: `blue`
+  - **valid options**: same as above
+  - **default**: `blue`
 
 - **logo**: Logo that will appear before the label.
 
-   - **valid options**: Value can be supplied in either of the following formats:
+  - **valid options**: Value can be supplied in either of the following formats:
 
-      - HTTP URL to a hosted svg icon. **Example:** `logo=https://www.svgrepo.com/show/513821/code.svg`.
-      - Data URL containing a base64-encoded SVG.
-         - **Note:** make sure you use URL-safe base64 encoding (`+` characters need to be encoded as `%2B`). Many tools do not default to this.
-         - **Example:** `logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaH...`.
+    - HTTP URL to a hosted svg icon. **Example:** `logo=https://www.svgrepo.com/show/513821/code.svg`.
+    - Data URL containing a base64-encoded SVG.
+      - **Note:** make sure you use URL-safe base64 encoding (`+` characters need to be encoded as `%2B`). Many tools do not default to this.
+      - **Example:** `logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaH...`.
 
-   - **default**: None
+  - **default**: None
 
 - **cacheSeconds**: How long to cache the response for. We use Vercel's [`stale-while-revalidate`](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#stale-while-revalidate) option to maximize cache efficiency
 
-   - **valid options**: Any number >= 60
-   - **default**: `60`
+  - **valid options**: Any number >= 60
+  - **default**: `60`
 
 ### Custom Options
 
 - **category**: Which metric is displayed
 
-   - **valid options**: `code`, `blanks`, `comments`, `files`
-   - **default**: `code`
+  - **valid options**: `lines`, `code`, `blanks`, `comments`, `files`
+  - **default**: `lines`
 
 - **format**: Output format
 
-   - **valid options**: `svg` or `json`
-   - **default**: `svg`
+  - **valid options**: `svg` or `json`
+  - **default**: `svg`
 
 - **logoAsLabel**: This setting only applies when a logo is supplied and the label is empty. If this setting is true, then the logo will use the label background color. If it is false, it will use the message background color.
 
-   - **valid options**: `1` or `true` will be parsed as a truthy value. Everything else will be considered `false`.
+  - **valid options**: `1` or `true` will be parsed as a truthy value. Everything else will be considered `false`.
 
 ## Self Hosting
 
