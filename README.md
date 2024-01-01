@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HK2YW2ZP4WFC1K8TRR9CFDVX
+  version: v2.0
+---
+
 # Tokei Serverless API
 
 ![license](https://img.shields.io/badge/License-MIT%20or%20Apache%202-green.svg)
@@ -12,7 +18,9 @@ Hosting Tokei on a traditional server has the inherent issue of filling up disk 
 
 ## Examples
 
-**Default (lines of code):** ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei)
+**Default (total lines):** ![Total Lines](https://aschey.tech/tokei/github/aschey/vercel-tokei)
+
+**Lines of Code:** ![Lines of Code](https://aschey.tech/tokei/github/aschey/vercel-tokei?category=code)
 
 **Blanks:** ![Blanks](https://aschey.tech/tokei/github/aschey/vercel-tokei?category=blanks)
 
@@ -36,7 +44,7 @@ Hosting Tokei on a traditional server has the inherent issue of filling up disk 
 
 ## URL Scheme
 
-```sh
+```sh {"id":"01HK2YW2ZP4WFC1K8TRPNJ3CST"}
 https://aschey.tech/tokei/<domain>[.com]/<namespace>/<repository>[?category=<category>&format=<format>&style=<style>&labelColor=<labelColor>&color=<color>&label=<label>&logo=<logo>&logoAsLabel=<logoAsLabel>&cacheSeconds=<cacheSeconds>]
 ```
 
@@ -83,8 +91,8 @@ All querystring parameters are optional.
 
 - **category**: Which metric is displayed
 
-   - **valid options**: `code`, `blanks`, `comments`, `files`
-   - **default**: `code`
+   - **valid options**: `lines`, `code`, `blanks`, `comments`, `files`
+   - **default**: `lines`
 
 - **format**: Output format
 

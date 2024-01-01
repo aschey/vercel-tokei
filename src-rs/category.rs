@@ -11,6 +11,8 @@ use tokei::Language;
 pub enum Category {
     #[strum(props(Description = "blank lines"))]
     Blanks,
+    #[strum(props(Description = "total lines"))]
+    Lines,
     #[strum(props(Description = "lines of code"))]
     Code,
     #[strum(props(Description = "comments"))]
@@ -28,9 +30,10 @@ impl Category {
     pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
         match query.get("category") {
             Some(format) => Self::from_str(format).map_err(|_| {
-                "Invalid category parameter. Choices are 'code', 'files', 'blanks', and 'comments'"
+                "Invalid category parameter. Choices are 'code', 'lines', 'files', 'blanks', and \
+                 'comments'"
             }),
-            None => Ok(Self::Code),
+            None => Ok(Self::Lines),
         }
     }
 
@@ -39,6 +42,7 @@ impl Category {
             Self::Blanks => language.blanks,
             Self::Files => language.reports.len(),
             Self::Comments => language.comments,
+            Self::Lines => language.lines(),
             Self::Code => language.code,
         }
     }
