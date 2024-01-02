@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 2
       - name: Check if package.json changed
         id: changed-files-yaml
-        uses: tj-actions/changed-files@v37
+        uses: tj-actions/changed-files@v41
         with:
           files_yaml: |
             package:
