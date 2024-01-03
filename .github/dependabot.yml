@@ -13,3 +13,8 @@ updates:
     allow:
       # we don't care about transitive dependencies since this is just a placeholder so we can update vercel.json
       - dependency-name: "vercel-rust"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
