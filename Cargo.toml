@@ -4,7 +4,7 @@ name = "vercel-tokei"
 version = "0.1.0"
 
 [dependencies]
-cached = "0.47.0"
+cached = "0.48.1"
 eyre = "0.6.11"
 git2 = "0.18.1"
 gix = { version = "0.58.0", features = [
