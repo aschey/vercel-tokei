@@ -1,0 +1,34 @@
+use vercel_runtime::{Body, Error, Request, Response};
+use vercel_tokei::util::internal_server_error;
+
+const SECONDS_IN_MINUTE: u64 = 60;
+
+#[cached::proc_macro::cached(
+    name = "CACHE",
+    result = true,
+    with_cached_flag = true,
+    type = "cached::TimedSizedCache<String, cached::Return<String>>",
+    create = "{ cached::TimedSizedCache::with_size_and_lifespan(1, 15 * SECONDS_IN_MINUTE) }",
+    convert = r#"{ url.to_string() }"#
+)]
+async fn fetch_readme(url: &str) -> Result<cached::Return<String>, Box<dyn std::error::Error>> {
+    let res = reqwest::get(url).await?;
+    let text = res.text().await?;
+    Ok(cached::Return::new(text))
+}
+
+async fn handler(_req: Request) -> Result<Response<Body>, Error> {
+    let text = fetch_readme("https://raw.githubusercontent.com/aschey/vercel-tokei/main/README.md")
+        .await
+        .map_err(internal_server_error)?;
+    Response::builder()
+        .body(markdown::to_html_with_options(&text, &markdown::Options::gfm())?.into())
+        .map_err(|e| internal_server_error(Box::new(e)))
+}
+
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<(), Error> {
+    tracing_subscriber::fmt().with_ansi(false).init();
+
+    vercel_runtime::run(handler).await
+}

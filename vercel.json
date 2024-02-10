@@ -1,13 +1,17 @@
 {
-    "functions": {
-      "api/**/*.rs": {
-        "runtime": "vercel-rust@4.0.6"
-      }
+  "functions": {
+    "api/**/*.rs": {
+      "runtime": "vercel-rust@4.0.6"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/tokei",
+      "destination": "/api/tokei"
     },
-    "rewrites": [
-      {
-        "source": "/tokei/:path*",
-        "destination": "/api/tokei/:path*"
-      }
-    ]
-  }
+    {
+      "source": "/tokei/:path*",
+      "destination": "/api/tokei/:path*"
+    }
+  ]
+}
