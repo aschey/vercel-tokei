@@ -4,7 +4,7 @@
 [![CI](https://github.com/aschey/vercel-tokei/actions/workflows/build.yml/badge.svg)](https://github.com/aschey/vercel-tokei/actions/workflows/build.yml)
 ![GitHub repo size](https://img.shields.io/github/repo-size/aschey/vercel-tokei)
 
-This is a fork of the [Tokei badge service](https://github.com/XAMPPRocky/tokei_rs) that runs as a Vercel serverless function, utilizing Vercel's [edge caching](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#) for fast responses. You can use the service hosted at `https://aschey.tech/tokei` or you can fork this repo and host it on your personal Vercel account.
+This is a fork of the [Tokei badge service](https://github.com/XAMPPRocky/tokei_rs) that runs as a Vercel serverless function, utilizing Vercel's [edge caching](https://vercel.com/docs/concepts/functions/serverless-functions/edge-caching#) for fast responses. You can use the service hosted at [https://aschey.tech/tokei](https://aschey.tech/tokei) or you can fork this repo and host it on your personal Vercel account.
 
 ## Motivation
 

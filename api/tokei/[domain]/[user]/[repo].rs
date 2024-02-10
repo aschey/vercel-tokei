@@ -9,11 +9,12 @@ use http::{Method, StatusCode};
 use rsbadges::Badge;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
-use tracing::{error, info};
+use tracing::info;
 use url::Url;
 use vercel_runtime::{Body, Error, Request, Response};
 use vercel_tokei::content_type::ContentType;
 use vercel_tokei::settings::Settings;
+use vercel_tokei::util::internal_server_error;
 
 const BILLION: usize = 1_000_000_000;
 const MILLION: usize = 1_000_000;
@@ -106,11 +107,6 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         Ok(badge) => build_response(badge, &settings),
         Err(e) => bad_request(e.to_string()),
     }
-}
-
-fn internal_server_error(err: Box<dyn std::error::Error>) -> Error {
-    error!("{err:?}");
-    "Internal Server Error".into()
 }
 
 fn build_response(badge: String, settings: &Settings) -> Result<Response<Body>, Error> {
