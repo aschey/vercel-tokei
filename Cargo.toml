@@ -10,7 +10,7 @@ git2 = "0.18.3"
 gix = { version = "0.61.1", features = [
     "blocking-http-transport-reqwest-native-tls",
 ] }
-http = "0.2.10"
+http = "1.1.0"
 lazy-regex = "3.1.0"
 markdown = "1.0.0-alpha.16"
 percent-encoding = "2.3.1"
