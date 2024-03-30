@@ -16,7 +16,7 @@ markdown = "1.0.0-alpha.16"
 percent-encoding = "2.3.1"
 reqwest = "0.12.1"
 rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "ee99a301ac9b22063464989610ed033af48856ee" }
-serde_json = "1.0.114"
+serde_json = "1.0.115"
 strum = "0.26.2"
 strum_macros = "0.26.2"
 tempfile = "3.10.1"
