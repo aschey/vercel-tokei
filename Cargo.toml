@@ -12,7 +12,7 @@ gix = { version = "0.62.0", features = [
 ] }
 http = "0.2.10"
 lazy-regex = "3.1.0"
-markdown = "1.0.0-alpha.16"
+markdown = "1.0.0-alpha.17"
 percent-encoding = "2.3.1"
 reqwest = "0.12.4"
 rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "ee99a301ac9b22063464989610ed033af48856ee" }
