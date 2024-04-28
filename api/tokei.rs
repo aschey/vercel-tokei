@@ -1,3 +1,4 @@
+use eyre::eyre;
 use vercel_runtime::{Body, Error, Request, Response};
 use vercel_tokei::util::internal_server_error;
 
@@ -22,7 +23,11 @@ async fn handler(_req: Request) -> Result<Response<Body>, Error> {
         .await
         .map_err(internal_server_error)?;
     Response::builder()
-        .body(markdown::to_html_with_options(&text, &markdown::Options::gfm())?.into())
+        .body(
+            markdown::to_html_with_options(&text, &markdown::Options::gfm())
+                .map_err(|e| eyre!("error parsing markdown: {e:?}"))?
+                .into(),
+        )
         .map_err(|e| internal_server_error(Box::new(e)))
 }
 
