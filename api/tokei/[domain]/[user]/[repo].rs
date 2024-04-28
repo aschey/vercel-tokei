@@ -187,7 +187,7 @@ fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn s
     name = "CACHE",
     result = true,
     with_cached_flag = true,
-    type = "cached::TimedSizedCache<String, cached::Return<Language>>",
+    ty = "cached::TimedSizedCache<String, cached::Return<Language>>",
     create = "{ cached::TimedSizedCache::with_size_and_lifespan(1000, DAY_IN_SECONDS) }",
     convert = r#"{ repo_identifier(url, _sha) }"#
 )]

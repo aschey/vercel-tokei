@@ -8,7 +8,7 @@ const SECONDS_IN_MINUTE: u64 = 60;
     name = "CACHE",
     result = true,
     with_cached_flag = true,
-    type = "cached::TimedSizedCache<String, cached::Return<String>>",
+    ty = "cached::TimedSizedCache<String, cached::Return<String>>",
     create = "{ cached::TimedSizedCache::with_size_and_lifespan(1, 15 * SECONDS_IN_MINUTE) }",
     convert = r#"{ url.to_string() }"#
 )]
