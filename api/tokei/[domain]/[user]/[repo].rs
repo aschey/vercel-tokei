@@ -221,6 +221,8 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
         stats += language;
     }
 
+    // clone_into doesn't work here because we're mutating the same variable that we're borrowing
+    #[allow(clippy::assigning_clones)]
     for stat in &mut stats.reports {
         stat.name = stat.name.strip_prefix(temp_path)?.to_owned();
     }

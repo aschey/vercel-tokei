@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::str::FromStr;
 
 use strum::EnumProperty;
@@ -49,14 +50,13 @@ impl Color {
     }
 }
 
-impl ToString for Color {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Other(val) => val.to_owned(),
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Other(val) => val,
             _ => self
                 .get_str("Hex")
-                .expect("Color variant should have hex property")
-                .to_owned(),
-        }
+                .expect("Color variant should have hex property"),
+        })
     }
 }
