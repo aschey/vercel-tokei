@@ -1,5 +1,5 @@
 on: [pull_request]
-name: "Update Cargo.lock"
+name: "cargo update"
 # required for dependabot to be able to commit changes
 permissions:
   contents: write
@@ -13,7 +13,7 @@ jobs:
           token: ${{ secrets.REPO_TOKEN }}
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 2
-      - name: Check if Cargo.toml changed
+      - name: Check if Cargo.toml or rust-toolchain changed
         id: changed-files-yaml
         uses: tj-actions/changed-files@v45
         with:
