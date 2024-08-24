@@ -1,0 +1,28 @@
+on: [pull_request]
+name: "Update Cargo.lock"
+# required for dependabot to be able to commit changes
+permissions:
+  contents: write
+jobs:
+  update-cargo-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 2
+      - name: Check if Cargo.toml changed
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            package:
+              Cargo.toml
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
+        with:
+          add: "."
+          message: "update Cargo.lock"
+          push: true
