@@ -7,7 +7,7 @@ version = "0.1.0"
 cached = { version = "0.53.1", features = ["async"] }
 eyre = "0.6.12"
 git2 = "0.19.0"
-gix = { version = "0.64.0", features = [
+gix = { version = "0.66.0", features = [
     "blocking-http-transport-reqwest-native-tls",
 ] }
 http = "1.1.0"
