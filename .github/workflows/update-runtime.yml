@@ -19,7 +19,7 @@ jobs:
         with:
           files_yaml: |
             package:
-              package.json
+              - package.json
       - name: Sync vercel.json
         if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
         run: |

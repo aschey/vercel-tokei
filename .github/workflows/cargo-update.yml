@@ -19,7 +19,8 @@ jobs:
         with:
           files_yaml: |
             package:
-              Cargo.toml
+              - Cargo.toml
+              - rust-toolchain.toml
       - name: cargo update
         if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
         run: cargo update
