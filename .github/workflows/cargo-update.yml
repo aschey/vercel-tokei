@@ -4,7 +4,7 @@ name: "cargo update"
 permissions:
   contents: write
 jobs:
-  update-cargo-lock:
+  cargo-update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
