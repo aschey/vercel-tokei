@@ -10,6 +10,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.REPO_TOKEN }}
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 2
       - name: Check if Cargo.toml changed
@@ -19,14 +20,13 @@ jobs:
           files_yaml: |
             package:
               Cargo.toml
-      - name: Sync vercel.json
+      - name: Rebuild
         if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
         run: |
           rm Cargo.lock
           cargo build
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
-        if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
         with:
           add: "."
           message: "update Cargo.lock"
