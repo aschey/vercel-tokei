@@ -1,10 +1,10 @@
 on: [pull_request]
-name: "Update Vercel runtime"
+name: "cargo update"
 # required for dependabot to be able to commit changes
 permissions:
   contents: write
 jobs:
-  update-runtime:
+  update-cargo-lock:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -13,20 +13,20 @@ jobs:
           token: ${{ secrets.REPO_TOKEN }}
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 2
-      - name: Check if package.json changed
+      - name: Check if Cargo.toml or rust-toolchain changed
         id: changed-files-yaml
         uses: tj-actions/changed-files@v45
         with:
           files_yaml: |
             package:
-              - package.json
-      - name: Sync vercel.json
+              - Cargo.toml
+              - rust-toolchain.toml
+      - name: cargo update
         if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
-        run: |
-          ./sync-runtime.sh
+        run: cargo update
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
           add: "."
-          message: "apply vercel runtime changes from package.json"
+          message: "update Cargo.lock"
           push: true
