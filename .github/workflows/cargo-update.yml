@@ -20,11 +20,9 @@ jobs:
           files_yaml: |
             package:
               Cargo.toml
-      - name: Rebuild
+      - name: cargo update
         if: steps.changed-files-yaml.outputs.package_any_changed == 'true'
-        run: |
-          rm Cargo.lock
-          cargo build
+        run: cargo update
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
