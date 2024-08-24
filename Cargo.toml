@@ -38,4 +38,3 @@ path = "api/tokei/[domain]/[user]/[repo].rs"
 [[bin]]
 name = "tokei-default"
 path = "api/tokei.rs"
-
