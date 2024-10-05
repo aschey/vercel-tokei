@@ -15,6 +15,7 @@ pub struct Settings {
     pub label: Option<String>,
     pub logo: Option<String>,
     pub logo_as_label: bool,
+    pub branch: Option<String>,
 }
 
 impl Settings {
@@ -37,6 +38,7 @@ impl Settings {
         if cache_seconds < DEFAULT_CACHE_SECONDS {
             cache_seconds = DEFAULT_CACHE_SECONDS;
         }
+        let branch = query.get("branch").map(|branch| branch.to_string());
 
         Ok(Self {
             cache_seconds,
@@ -46,6 +48,7 @@ impl Settings {
             label,
             logo,
             logo_as_label,
+            branch,
         })
     }
 }
