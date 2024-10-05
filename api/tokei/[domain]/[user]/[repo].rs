@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use cached::Cached;
 use eyre::Context;
-use git2::{Direction, Remote, Repository};
+use git2::{Direction, Remote, RemoteHead, Repository};
 use gix::remote::fetch;
 use gix::{interrupt, progress};
 use http::{Method, StatusCode};
@@ -81,11 +81,11 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         Err(e) => return bad_request(format!("Error listing repo contents: {}", e)),
     };
 
-    let sha = match repo_list.first() {
-        Some(sha) => sha.oid().to_string(),
-        None => return bad_request("Repo contains no refs".to_string()),
+    let sha = match find_sha(settings.branch.as_deref(), repo_list) {
+        Ok(sha) => sha,
+        Err(e) => return bad_request(e.to_string()),
     };
-    info!("Repo sha: {sha:?}");
+    info!("Repo sha: {sha:?} for branch {:?}", settings.branch);
 
     if let Some(badge) = CACHE
         .lock()
@@ -99,7 +99,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         };
     }
 
-    let stats = get_statistics(&url, &sha)
+    let stats = get_statistics(&url, &sha, settings.branch.as_deref())
         .wrap_err_with(|| "Error getting statistics")?
         .value;
 
@@ -107,6 +107,29 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         Ok(badge) => build_response(badge, &settings),
         Err(e) => bad_request(e.to_string()),
     }
+}
+
+fn find_sha(
+    branch: Option<&str>,
+    repo_list: &[RemoteHead],
+) -> Result<String, Box<dyn std::error::Error>> {
+    let head = match branch {
+        Some(ref branch) => {
+            let search = format!("refs/heads/{branch}");
+            let found_branch = repo_list.iter().find(|r| r.name() == search.as_str());
+            let Some(found_branch) = found_branch else {
+                return Err(format!("Requested branch {branch:?} not found").into());
+            };
+            found_branch
+        }
+        None => {
+            let Some(first) = repo_list.first() else {
+                return Err("Repo contains no refs".into());
+            };
+            first
+        }
+    };
+    Ok(head.oid().to_string())
 }
 
 fn build_response(badge: String, settings: &Settings) -> Result<Response<Body>, Error> {
@@ -191,7 +214,11 @@ fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn s
     create = "{ cached::TimedSizedCache::with_size_and_lifespan(1000, DAY_IN_SECONDS) }",
     convert = r#"{ repo_identifier(url, _sha) }"#
 )]
-fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language>> {
+fn get_statistics(
+    url: &str,
+    _sha: &str,
+    branch_name: Option<&str>,
+) -> eyre::Result<cached::Return<Language>> {
     let temp_dir = TempDir::new()?;
     let temp_path = temp_dir
         .path()
@@ -203,6 +230,7 @@ fn get_statistics(url: &str, _sha: &str) -> eyre::Result<cached::Return<Language
     let (checkout, _) = gix::prepare_clone(url, temp_path)
         .wrap_err_with(|| "Error cloning repo")?
         .with_shallow(shallow)
+        .with_ref_name(branch_name)?
         .fetch_only(progress::Discard, &interrupt::IS_INTERRUPTED)
         .wrap_err_with(|| "Error fetching")?;
 

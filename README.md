@@ -39,7 +39,7 @@ Hosting Tokei on a traditional server has the inherent issue of filling up disk 
 ## URL Scheme
 
 ```sh
-https://aschey.tech/tokei/<domain>[.com]/<namespace>/<repository>[?category=<category>&format=<format>&style=<style>&labelColor=<labelColor>&color=<color>&label=<label>&logo=<logo>&logoAsLabel=<logoAsLabel>&cacheSeconds=<cacheSeconds>]
+https://aschey.tech/tokei/<domain>[.com]/<namespace>/<repository>[?category=<category>&format=<format>&style=<style>&labelColor=<labelColor>&color=<color>&label=<label>&logo=<logo>&logoAsLabel=<logoAsLabel>&cacheSeconds=<cacheSeconds>&branch=<branch>]
 ```
 
 All querystring parameters are optional.
@@ -96,6 +96,8 @@ All querystring parameters are optional.
 - **logoAsLabel**: This setting only applies when a logo is supplied and the label is empty. If this setting is true, then the logo will use the label background color. If it is false, it will use the message background color.
 
   - **valid options**: `1` or `true` will be parsed as a truthy value. Everything else will be considered `false`.
+
+- **branch**: Use a specific git branch
 
 ## Self Hosting
 
