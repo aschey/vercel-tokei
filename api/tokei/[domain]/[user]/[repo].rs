@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::DirEntry;
 use std::time::{Duration, SystemTime};
-use std::{fs, io};
+use std::{fs, io, process};
 
 use cached::Cached;
 use eyre::Context;
@@ -12,7 +12,7 @@ use http::{Method, StatusCode};
 use rsbadges::Badge;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 use url::Url;
 use vercel_runtime::{Body, Error, Request, Response};
 use vercel_tokei::content_type::ContentType;
@@ -225,7 +225,15 @@ fn get_statistics(
     let temp_prefix = "tokei-cache";
     let _ = clear_previous_files(temp_prefix).inspect_err(|e| warn!("error cleaning files: {e:?}"));
 
-    let temp_dir = TempDir::with_prefix(temp_prefix)?;
+    let temp_dir = match TempDir::with_prefix(temp_prefix) {
+        Ok(temp_dir) => temp_dir,
+        Err(e) => {
+            error!("Failed to create temp dir: {e:?}. Force exiting process");
+            // If we failed to create the temp dir, the disk is likely full.
+            // Force exit the process to force a new container to be created.
+            process::exit(1);
+        }
+    };
     let temp_path = temp_dir
         .path()
         .to_str()
