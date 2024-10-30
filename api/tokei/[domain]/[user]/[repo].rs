@@ -1,4 +1,7 @@
 use std::collections::HashMap;
+use std::fs::DirEntry;
+use std::time::{Duration, SystemTime};
+use std::{fs, io, process};
 
 use cached::Cached;
 use eyre::Context;
@@ -9,7 +12,7 @@ use http::{Method, StatusCode};
 use rsbadges::Badge;
 use tempfile::TempDir;
 use tokei::{Config, Language, Languages};
-use tracing::info;
+use tracing::{error, info, warn};
 use url::Url;
 use vercel_runtime::{Body, Error, Request, Response};
 use vercel_tokei::content_type::ContentType;
@@ -219,7 +222,18 @@ fn get_statistics(
     _sha: &str,
     branch_name: Option<&str>,
 ) -> eyre::Result<cached::Return<Language>> {
-    let temp_dir = TempDir::new()?;
+    let temp_prefix = "tokei-cache";
+    let _ = clear_previous_files(temp_prefix).inspect_err(|e| warn!("error cleaning files: {e:?}"));
+
+    let temp_dir = match TempDir::with_prefix(temp_prefix) {
+        Ok(temp_dir) => temp_dir,
+        Err(e) => {
+            error!("Failed to create temp dir: {e:?}. Force exiting process");
+            // If we failed to create the temp dir, the disk is likely full.
+            // Force exit the process to force a new container to be created.
+            process::exit(1);
+        }
+    };
     let temp_path = temp_dir
         .path()
         .to_str()
@@ -249,13 +263,48 @@ fn get_statistics(
         stats += language;
     }
 
-    // clone_into doesn't work here because we're mutating the same variable that we're borrowing
-    #[allow(clippy::assigning_clones)]
     for stat in &mut stats.reports {
         stat.name = stat.name.strip_prefix(temp_path)?.to_owned();
     }
+    let _ = temp_dir
+        .close()
+        .map_err(|e| warn!("error removing temporary directory: {e:?}"));
 
     Ok(cached::Return::new(stats))
+}
+
+fn clear_previous_files(prefix: &str) -> io::Result<()> {
+    // Previous temp files should get removed automatically, but we'll force remove any old files
+    // here just in case.
+    let env_temp = std::env::temp_dir();
+    let cache_prefix = env_temp.join(prefix);
+    let cache_prefix = cache_prefix.as_os_str().as_encoded_bytes();
+    for entry in fs::read_dir(env_temp)? {
+        let _ =
+            clear_entry(entry, cache_prefix).inspect_err(|e| warn!("failed to clean entry: {e:?}"));
+    }
+
+    Ok(())
+}
+
+fn clear_entry(entry: io::Result<DirEntry>, cache_prefix: &[u8]) -> io::Result<()> {
+    let entry = entry?;
+    let path = entry.path();
+
+    if path.is_dir()
+        && path
+            .as_os_str()
+            .as_encoded_bytes()
+            .starts_with(cache_prefix)
+    {
+        let created = path.metadata()?.created()?;
+        if created < SystemTime::now() - Duration::from_secs(60) {
+            info!("removing old path: {path:?}");
+            fs::remove_dir_all(path).unwrap();
+        }
+    }
+
+    Ok(())
 }
 
 #[tokio::main(flavor = "current_thread")]
