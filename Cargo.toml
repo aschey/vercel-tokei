@@ -19,7 +19,7 @@ rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "ee99a301ac9b2206
 serde_json = "1.0.134"
 strum = "0.26.3"
 strum_macros = "0.26.4"
-tempfile = "3.10.1"
+tempfile = "3.15.0"
 tokei = "12.1.2"
 tokio = { version = "1.42.0", features = ["macros"] }
 tracing = "0.1.41"
