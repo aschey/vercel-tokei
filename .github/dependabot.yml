@@ -5,6 +5,9 @@ updates:
     schedule:
       interval: "weekly"
       day: "saturday"
+    groups:
+      cargo-dependencies:
+        patterns: ["*"]
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
