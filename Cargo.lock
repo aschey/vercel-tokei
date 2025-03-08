@@ -3325,7 +3325,7 @@ dependencies = [
 [[package]]
 name = "rsbadges"
 version = "1.1.5"
-source = "git+https://github.com/aschey/rsbadges?rev=be3cd990ed185b30c6f2fcbe480a0c3fd6818002#be3cd990ed185b30c6f2fcbe480a0c3fd6818002"
+source = "git+https://github.com/aschey/rsbadges?rev=9a6035ae5d2b5eb6e0c9e993825ccd3cb8af472f#9a6035ae5d2b5eb6e0c9e993825ccd3cb8af472f"
 dependencies = [
  "askama",
  "base64",
