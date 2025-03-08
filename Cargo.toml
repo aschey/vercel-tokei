@@ -20,7 +20,7 @@ reqwest = { version = "0.12.12", default-features = false, features = [
   "macos-system-configuration",
   "native-tls",
 ] }
-rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "fb7daafc0a5e06619f9cfaf6b8c7a772ac9119b1", default-features = false, features = [
+rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "be3cd990ed185b30c6f2fcbe480a0c3fd6818002", default-features = false, features = [
   "native-tls",
 ] }
 serde_json = "1.0.139"
