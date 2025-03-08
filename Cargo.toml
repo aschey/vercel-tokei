@@ -1,5 +1,5 @@
 [package]
-edition = "2021"
+edition = "2024"
 name = "vercel-tokei"
 version = "0.1.0"
 
@@ -8,13 +8,18 @@ cached = { version = "0.54.0", features = ["async"] }
 eyre = "0.6.12"
 git2 = "0.20.0"
 gix = { version = "0.70.0", features = [
-    "blocking-http-transport-reqwest-native-tls",
+  "blocking-http-transport-reqwest-native-tls",
 ] }
 http = "1.1.0"
 lazy-regex = "3.3.0"
 markdown = "1.0.0-alpha.23"
 percent-encoding = "2.3.1"
-reqwest = "0.12.12"
+reqwest = { version = "0.12.12", default-features = false, features = [
+  "charset",
+  "http2",
+  "macos-system-configuration",
+  "native-tls-vendored",
+] }
 rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "ee99a301ac9b22063464989610ed033af48856ee" }
 serde_json = "1.0.139"
 strum = "0.27.1"
