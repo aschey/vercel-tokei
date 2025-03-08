@@ -4,7 +4,7 @@ name = "vercel-tokei"
 version = "0.1.0"
 
 [dependencies]
-cached = { version = "0.54.0", features = ["async"] }
+cached = { version = "0.55.1", features = ["async"] }
 eyre = "0.6.12"
 git2 = "0.20.0"
 gix = { version = "0.70.0", features = [
@@ -16,12 +16,12 @@ markdown = "1.0.0-alpha.23"
 percent-encoding = "2.3.1"
 reqwest = "0.12.12"
 rsbadges = { git = "https://github.com/aschey/rsbadges", rev = "ee99a301ac9b22063464989610ed033af48856ee" }
-serde_json = "1.0.139"
+serde_json = "1.0.140"
 strum = "0.27.1"
 strum_macros = "0.27.1"
-tempfile = "3.17.1"
+tempfile = "3.18.0"
 tokei = "12.1.2"
-tokio = { version = "1.43.0", features = ["macros"] }
+tokio = { version = "1.44.0", features = ["macros"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.18"
 url = "2.5.3"
