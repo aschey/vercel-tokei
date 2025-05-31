@@ -4,6 +4,12 @@
       "runtime": "vercel-rust@4.0.8"
     }
   },
+  "redirects": [
+    {
+      "source": "/tokei/",
+      "destination": "/tokei"
+    }
+  ],
   "rewrites": [
     {
       "source": "/tokei",
