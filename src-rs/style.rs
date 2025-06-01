@@ -16,7 +16,7 @@ pub enum Style {
 }
 
 impl Style {
-    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+    pub fn from_query(query: &HashMap<String, Cow<str>>) -> Result<Self, &'static str> {
         match query.get("style") {
             Some(style) => Self::from_str(style).map_err(|_| {
                 "Invalid style parameter. Choices are 'flat', 'flat-square', 'plastic', \

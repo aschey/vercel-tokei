@@ -11,7 +11,7 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+    pub fn from_query(query: &HashMap<String, Cow<str>>) -> Result<Self, &'static str> {
         let style = Style::from_query(query)?;
         let label_color = Color::from_query(query, "labelColor", Color::Grey);
         let color = Color::from_query(query, "color", Color::Blue);

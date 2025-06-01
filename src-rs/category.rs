@@ -27,7 +27,7 @@ impl Category {
             .expect("description should be set")
     }
 
-    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+    pub fn from_query(query: &HashMap<String, Cow<str>>) -> Result<Self, &'static str> {
         match query.get("category") {
             Some(format) => Self::from_str(format).map_err(|_| {
                 "Invalid category parameter. Choices are 'code', 'lines', 'files', 'blanks', and \

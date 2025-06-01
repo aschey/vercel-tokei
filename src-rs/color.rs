@@ -34,7 +34,7 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>, key: &str, default: Color) -> Self {
+    pub fn from_query(query: &HashMap<String, Cow<str>>, key: &str, default: Color) -> Self {
         match query.get(key) {
             Some(color) => Self::from_str(color).unwrap_or_else(|_| {
                 let mut color = color.to_string();

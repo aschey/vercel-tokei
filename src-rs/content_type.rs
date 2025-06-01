@@ -15,7 +15,7 @@ pub enum ContentType {
 }
 
 impl ContentType {
-    pub fn from_query(query: &HashMap<Cow<str>, Cow<str>>) -> Result<Self, &'static str> {
+    pub fn from_query(query: &HashMap<String, Cow<str>>) -> Result<Self, &'static str> {
         match query.get("format") {
             Some(format) => Self::from_str(format)
                 .map_err(|_| "Invalid format parameter. Choices are 'svg' and 'json'"),
