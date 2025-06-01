@@ -11,7 +11,7 @@ use gix::{interrupt, progress};
 use http::{Method, StatusCode};
 use rsbadges::Badge;
 use tempfile::TempDir;
-use tokei::{Config, Language, Languages};
+use tokei::{Config, Language, LanguageType, Languages};
 use tracing::{error, info, warn};
 use url::Url;
 use vercel_runtime::{Body, Error, Request, Response};
@@ -39,13 +39,36 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
 
     let parsed_url =
         Url::parse(&req.uri().to_string()).map_err(|e| internal_server_error(Box::new(e)))?;
-    let hash_query: HashMap<_, _> = parsed_url.query_pairs().collect();
+
+    let hash_query: HashMap<_, _> = parsed_url
+        .query_pairs()
+        .map(|p| (p.0.to_ascii_lowercase(), p.1))
+        .collect();
 
     info!("Query pairs: {hash_query:?}");
 
     let settings = match Settings::from_query(&hash_query) {
         Ok(settings) => settings,
         Err(e) => return bad_request(e.to_string()),
+    };
+    let language_filter: Option<Vec<LanguageType>> = if let Some(languages) = &settings.languages {
+        let languages: Result<Vec<LanguageType>, Result<Response<Body>, Error>> = languages
+            .iter()
+            .map(|l| {
+                LanguageType::from_name(l).ok_or_else(|| {
+                    bad_request(format!(
+                        "Unknown language: {l}. Please note that languages are case sensitive and \
+                         should be capitalized."
+                    ))
+                })
+            })
+            .collect();
+        match languages {
+            Ok(l) => Some(l),
+            Err(e) => return e,
+        }
+    } else {
+        None
     };
 
     let (domain, user, repo) = (
@@ -93,7 +116,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
     if let Some(badge) = CACHE
         .lock()
         .expect("Cache mutex poisoned")
-        .cache_get(&repo_identifier(&url, &sha))
+        .cache_get(&cache_key(&url, &sha, &settings))
     {
         info!("Serving from cache");
         return match make_badge(&settings, badge) {
@@ -102,7 +125,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         };
     }
 
-    let stats = get_statistics(&url, &sha, settings.branch.as_deref())
+    let stats = get_statistics(&url, &sha, &settings, language_filter)
         .wrap_err_with(|| "Error getting statistics")?
         .value;
 
@@ -158,8 +181,8 @@ fn bad_request(body: String) -> Result<Response<Body>, Error> {
         .map_err(|e| internal_server_error(Box::new(e)))
 }
 
-fn repo_identifier(url: &str, sha: &str) -> String {
-    format!("{}#{}", url, sha)
+fn cache_key(url: &str, sha: &str, settings: &Settings) -> String {
+    format!("{}#{}#{}", url, sha, settings.loc_cache_key())
 }
 
 fn trim_and_float(num: usize, trim: usize) -> f64 {
@@ -204,7 +227,6 @@ fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn s
         use_logo_as_label: settings.logo_as_label,
         ..Badge::default()
     };
-
     let badge_style = settings.theme.style.to_badge_style(badge);
     Ok(badge_style.generate_svg()?)
 }
@@ -215,12 +237,13 @@ fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn s
     with_cached_flag = true,
     ty = "cached::TimedSizedCache<String, cached::Return<Language>>",
     create = "{ cached::TimedSizedCache::with_size_and_lifespan(1000, DAY_IN_SECONDS) }",
-    convert = r#"{ repo_identifier(url, _sha) }"#
+    convert = r#"{ cache_key(url, _sha, settings) }"#
 )]
 fn get_statistics(
     url: &str,
     _sha: &str,
-    branch_name: Option<&str>,
+    settings: &Settings,
+    language_filter: Option<Vec<LanguageType>>,
 ) -> eyre::Result<cached::Return<Language>> {
     let temp_prefix = "tokei-cache";
     let _ = clear_previous_files(temp_prefix).inspect_err(|e| warn!("error cleaning files: {e:?}"));
@@ -244,7 +267,7 @@ fn get_statistics(
     let (checkout, _) = gix::prepare_clone(url, temp_path)
         .wrap_err_with(|| "Error cloning repo")?
         .with_shallow(shallow)
-        .with_ref_name(branch_name)?
+        .with_ref_name(settings.branch.as_deref())?
         .fetch_only(progress::Discard, &interrupt::IS_INTERRUPTED)
         .wrap_err_with(|| "Error fetching")?;
 
@@ -257,7 +280,12 @@ fn get_statistics(
 
     let mut stats = Language::new();
     let mut languages = Languages::new();
-    languages.get_statistics(&[temp_path], &[], &Config::default());
+    let config = Config {
+        types: language_filter,
+        ..Default::default()
+    };
+
+    languages.get_statistics(&[temp_path], &[], &config);
 
     for (_, language) in languages {
         stats += language;
