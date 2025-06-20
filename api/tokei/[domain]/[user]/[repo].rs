@@ -278,7 +278,6 @@ fn get_statistics(
     repo.checkout_head(None)
         .wrap_err_with(|| "Error checking out HEAD")?;
 
-    let mut stats = Language::new();
     let mut languages = Languages::new();
     let config = Config {
         types: language_filter,
@@ -286,10 +285,7 @@ fn get_statistics(
     };
 
     languages.get_statistics(&[temp_path], &[], &config);
-
-    for (_, language) in languages {
-        stats += language;
-    }
+    let mut stats = languages.total();
 
     for stat in &mut stats.reports {
         stat.name = stat.name.strip_prefix(temp_path)?.to_owned();
