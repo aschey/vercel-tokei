@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use eyre::eyre;
 use vercel_runtime::{Body, Error, Request, Response};
 use vercel_tokei::util::internal_server_error;
@@ -9,7 +11,8 @@ const SECONDS_IN_MINUTE: u64 = 60;
     result = true,
     with_cached_flag = true,
     ty = "cached::TimedSizedCache<String, cached::Return<String>>",
-    create = "{ cached::TimedSizedCache::with_size_and_lifespan(1, 15 * SECONDS_IN_MINUTE) }",
+    create = "{ cached::TimedSizedCache::with_size_and_lifespan(1, Duration::from_secs(15 * \
+              SECONDS_IN_MINUTE)) }",
     convert = r#"{ url.to_string() }"#
 )]
 async fn fetch_readme(url: &str) -> Result<cached::Return<String>, Box<dyn std::error::Error>> {

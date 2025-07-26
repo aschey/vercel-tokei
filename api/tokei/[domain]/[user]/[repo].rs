@@ -99,12 +99,12 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
     };
 
     if let Err(e) = repo.connect(Direction::Fetch) {
-        return bad_request(format!("Error connecting to repository: {}", e));
+        return bad_request(format!("Error connecting to repository: {e}"));
     }
 
     let repo_list = match repo.list() {
         Ok(list) => list,
-        Err(e) => return bad_request(format!("Error listing repo contents: {}", e)),
+        Err(e) => return bad_request(format!("Error listing repo contents: {e}")),
     };
 
     let sha = match find_sha(settings.branch.as_deref(), repo_list) {
@@ -236,7 +236,8 @@ fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn s
     result = true,
     with_cached_flag = true,
     ty = "cached::TimedSizedCache<String, cached::Return<Language>>",
-    create = "{ cached::TimedSizedCache::with_size_and_lifespan(1000, DAY_IN_SECONDS) }",
+    create = "{ cached::TimedSizedCache::with_size_and_lifespan(1000, \
+              Duration::from_secs(DAY_IN_SECONDS)) }",
     convert = r#"{ cache_key(url, _sha, settings) }"#
 )]
 fn get_statistics(
