@@ -1,5 +1,7 @@
 on: [push]
 name: CI
+permissions:
+  contents: read
 jobs:
   build-and-lint:
     name: Build and lint
