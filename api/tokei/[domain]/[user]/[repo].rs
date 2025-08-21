@@ -5,9 +5,8 @@ use std::{fs, io, process};
 
 use cached::Cached;
 use eyre::Context;
-use git2::{Direction, Remote, RemoteHead, Repository};
-use gix::remote::fetch;
-use gix::{interrupt, progress};
+use git2::build::RepoBuilder;
+use git2::{Direction, FetchOptions, Remote, RemoteHead};
 use http::{Method, StatusCode};
 use rsbadges::Badge;
 use tempfile::TempDir;
@@ -258,27 +257,18 @@ fn get_statistics(
             process::exit(1);
         }
     };
-    let temp_path = temp_dir
-        .path()
-        .to_str()
-        .ok_or(eyre::eyre!("Error reading tempdir path"))?;
 
-    let shallow = fetch::Shallow::DepthAtRemote(1.try_into().expect("non-zero"));
-    let url = gix::url::parse(url.into())?;
-    let (checkout, _) = gix::prepare_clone(url, temp_path)
-        .wrap_err_with(|| "Error cloning repo")?
-        .with_shallow(shallow)
-        .with_ref_name(settings.branch.as_deref())?
-        .fetch_only(progress::Discard, &interrupt::IS_INTERRUPTED)
-        .wrap_err_with(|| "Error fetching")?;
-
-    // Gix supports shallow clones but git2 does not, so we have to use both libraries for now.
-    // Currently gix does not have full support for checkouts (missing support for submodules) so we
-    // use git2 for this
-    let repo = Repository::discover(checkout.path()).wrap_err_with(|| "Error discovering repo")?;
-    repo.checkout_head(None)
-        .wrap_err_with(|| "Error checking out HEAD")?;
-
+    let temp_path = temp_dir.path();
+    let mut fetch_opts = FetchOptions::new();
+    fetch_opts.depth(1);
+    let mut repo_builder = RepoBuilder::new();
+    repo_builder.fetch_options(fetch_opts);
+    if let Some(branch) = &settings.branch {
+        repo_builder.branch(branch);
+    }
+    repo_builder
+        .clone(url, temp_path)
+        .wrap_err_with(|| "Error discovering repo")?;
     let mut languages = Languages::new();
     let config = Config {
         types: language_filter,
