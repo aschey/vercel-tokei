@@ -8,6 +8,13 @@ updates:
     groups:
       cargo-dependencies:
         patterns: ["*"]
+  - package-ecosystem: "rust-toolchain"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+    commit-message:
+      prefix: "chore"
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
