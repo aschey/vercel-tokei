@@ -40,10 +40,14 @@ impl Category {
     pub fn stats(&self, language: &Language) -> usize {
         match self {
             Self::Blanks => language.blanks,
-            Self::Files => language.reports.len(),
+            Self::Files => calc_files(language),
             Self::Comments => language.comments,
             Self::Lines => language.lines(),
             Self::Code => language.code,
         }
     }
+}
+
+fn calc_files(language: &Language) -> usize {
+    language.reports.len() + language.children.values().map(|r| r.len()).sum::<usize>()
 }
