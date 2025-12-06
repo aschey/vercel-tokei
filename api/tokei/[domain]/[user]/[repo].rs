@@ -13,7 +13,7 @@ use tempfile::TempDir;
 use tokei::{Config, Language, LanguageType, Languages};
 use tracing::{error, info, warn};
 use url::Url;
-use vercel_runtime::{Body, Error, Request, Response};
+use vercel_runtime::{Error, Request, Response, ResponseBody, service_fn};
 use vercel_tokei::content_type::ContentType;
 use vercel_tokei::settings::Settings;
 use vercel_tokei::util::internal_server_error;
@@ -24,13 +24,13 @@ const THOUSAND: usize = 1_000;
 const DAY_IN_SECONDS: u64 = 24 * 60 * 60;
 const REVALIDATE_FACTOR: u32 = 5;
 
-async fn handler(req: Request) -> Result<Response<Body>, Error> {
+async fn handler(req: Request) -> Result<Response<ResponseBody>, Error> {
     tokio::task::spawn_blocking(|| handle_request(req))
         .await
         .with_context(|| "Task failed to run")?
 }
 
-fn handle_request(req: Request) -> Result<Response<Body>, Error> {
+fn handle_request(req: Request) -> Result<Response<ResponseBody>, Error> {
     // For health checks
     if req.method() == Method::HEAD {
         return Ok(Response::new("".into()));
@@ -51,7 +51,7 @@ fn handle_request(req: Request) -> Result<Response<Body>, Error> {
         Err(e) => return bad_request(e.to_string()),
     };
     let language_filter: Option<Vec<LanguageType>> = if let Some(languages) = &settings.languages {
-        let languages: Result<Vec<LanguageType>, Result<Response<Body>, Error>> = languages
+        let languages: Result<Vec<LanguageType>, Result<Response<ResponseBody>, Error>> = languages
             .iter()
             .map(|l| {
                 LanguageType::from_name(l).ok_or_else(|| {
@@ -157,7 +157,7 @@ fn find_sha(
     Ok(head.oid().to_string())
 }
 
-fn build_response(badge: String, settings: &Settings) -> Result<Response<Body>, Error> {
+fn build_response(badge: String, settings: &Settings) -> Result<Response<ResponseBody>, Error> {
     Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", settings.content_type.response_type())
@@ -173,7 +173,7 @@ fn build_response(badge: String, settings: &Settings) -> Result<Response<Body>, 
         .map_err(|e| internal_server_error(Box::new(e)))
 }
 
-fn bad_request(body: String) -> Result<Response<Body>, Error> {
+fn bad_request(body: String) -> Result<Response<ResponseBody>, Error> {
     Response::builder()
         .status(StatusCode::BAD_REQUEST)
         .body(body.into())
@@ -188,7 +188,7 @@ fn trim_and_float(num: usize, trim: usize) -> f64 {
     (num as f64) / (trim as f64)
 }
 
-fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Box<dyn std::error::Error>> {
+fn make_badge(settings: &Settings, stats: &Language) -> Result<String, Error> {
     if settings.content_type == ContentType::Json {
         return Ok(serde_json::to_string(&stats)?);
     }
@@ -325,5 +325,5 @@ fn clear_entry(entry: io::Result<DirEntry>, cache_prefix: &[u8]) -> io::Result<(
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt().with_ansi(false).init();
-    vercel_runtime::run(handler).await
+    vercel_runtime::run(service_fn(handler)).await
 }
