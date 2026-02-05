@@ -6,7 +6,7 @@ version = "0.1.0"
 [dependencies]
 cached = { version = "0.56.0", features = ["async"] }
 eyre = "0.6.12"
-git2 = "0.20.2"
+git2 = "0.20.4"
 http = "1.4.0"
 lazy-regex = "3.5.1"
 markdown = "1.0.0"
