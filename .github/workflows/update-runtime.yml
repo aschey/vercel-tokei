@@ -25,7 +25,7 @@ jobs:
         run: |
           ./sync-runtime.sh
       - name: Commit changes
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10
         with:
           add: "."
           message: "apply vercel runtime changes from package.json"
